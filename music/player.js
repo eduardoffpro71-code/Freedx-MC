@@ -120,16 +120,7 @@ const args = [
     song.url,
 
     "-f",
-    "bestaudio*",
-
-    "--buffer-size",
-    "16K",
-
-    "--fragment-retries",
-    "infinite",
-
-    "--retries",
-    "infinite",
+    "best",
 
     "--no-playlist",
 
@@ -147,7 +138,11 @@ const args = [
     "--user-agent",
     "Mozilla/5.0",
 
-    "--no-part",
+    "--retries",
+    "10",
+
+    "--fragment-retries",
+    "10",
 
     "-o",
     "-"
