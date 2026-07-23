@@ -130,8 +130,7 @@ async function playSong(guild, song){
 
 
             "--extractor-args",
-            "youtube:player_client=web",
-
+            "youtube:player_client=tv",
 
             "-o",
             "-"
