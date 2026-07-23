@@ -95,9 +95,7 @@ async function playSong(guild, song) {
 
             "-o",
             "-"
-
         ];
-
 
 
         if(fs.existsSync(cookies)) {
@@ -106,9 +104,17 @@ async function playSong(guild, song) {
                 "🍪 Usando cookies"
             );
 
-            args.unshift(
+            args.splice(
+                1,
+                0,
                 "--cookies",
                 cookies
+            );
+
+        } else {
+
+            console.log(
+                "⚠️ cookies.txt não encontrado"
             );
 
         }
@@ -126,6 +132,7 @@ async function playSong(guild, song) {
             spawn(
                 ffmpeg,
                 [
+
                     "-i",
                     "pipe:0",
 
@@ -216,6 +223,7 @@ async function playSong(guild, song) {
 
 
         queue.resource = resource;
+
         queue.current = song;
 
 
@@ -264,7 +272,6 @@ async function playSong(guild, song) {
                 queue.playing = false;
 
 
-
                 if(queue.ffmpegProcess) {
 
                     try {
@@ -276,13 +283,11 @@ async function playSong(guild, song) {
                 }
 
 
-
                 if(!queue.loop) {
 
                     queue.songs.shift();
 
                 }
-
 
 
                 queue.current = null;
