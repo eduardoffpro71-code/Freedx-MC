@@ -71,13 +71,6 @@ async function playSong(guild, song) {
         );
 
 
-        console.log(
-            "🍪 Cookies:",
-            fs.existsSync(cookies)
-        );
-
-
-
         const args = [
 
             song.url,
@@ -88,8 +81,6 @@ async function playSong(guild, song) {
             "--no-playlist",
 
             "--no-warnings",
-
-            "--ignore-errors",
 
             "--force-ipv4",
 
@@ -118,7 +109,6 @@ async function playSong(guild, song) {
                 "🍪 Usando cookies"
             );
 
-
             args.push(
                 "--cookies",
                 cookies
@@ -129,7 +119,9 @@ async function playSong(guild, song) {
 
 
         const stream =
-            ytDlp.execStream(args);
+            ytDlp.execStream(
+                args
+            );
 
 
 
@@ -137,8 +129,6 @@ async function playSong(guild, song) {
             spawn(
                 ffmpeg,
                 [
-
-                    "-re",
 
                     "-i",
                     "pipe:0",
@@ -188,22 +178,18 @@ async function playSong(guild, song) {
                 queue.playing = false;
 
 
-                try{
-                    ffmpegProcess.kill();
-                }catch(e){}
-
             }
         );
 
 
 
         ffmpegProcess.on(
-            "error",
-            err => {
+            "close",
+            code => {
 
                 console.log(
-                    "❌ FFmpeg:",
-                    err.message
+                    "FFmpeg fechado:",
+                    code
                 );
 
             }
@@ -235,12 +221,6 @@ async function playSong(guild, song) {
         queue.resource = resource;
 
         queue.current = song;
-
-
-        queue.duration =
-            durationToSeconds(
-                song.duration
-            );
 
 
 
@@ -275,6 +255,11 @@ async function playSong(guild, song) {
                 console.log(
                     "⏹️ Música terminou"
                 );
+
+
+                // evita matar fila se o stream cair
+                if(!queue.playing)
+                    return;
 
 
                 queue.playing = false;
@@ -317,7 +302,7 @@ async function playSong(guild, song) {
                             queue.songs[0]
                         );
 
-                    },1000);
+                    },1500);
 
                 }
 
