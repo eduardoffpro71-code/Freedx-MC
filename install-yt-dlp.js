@@ -7,12 +7,19 @@ const url =
 "https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp_linux";
 
 
-function baixar(urlAtual){
+function baixar(urlAtual, primeira = true){
 
     return new Promise((resolve, reject)=>{
 
 
-        console.log("⬇️ Baixando yt-dlp atualizado...");
+        if(primeira){
+
+            console.log(
+                "⬇️ Baixando yt-dlp atualizado..."
+            );
+
+        }
+
 
 
         https.get(urlAtual, res=>{
@@ -26,7 +33,8 @@ function baixar(urlAtual){
             ){
 
                 return baixar(
-                    res.headers.location
+                    res.headers.location,
+                    false
                 )
                 .then(resolve)
                 .catch(reject);
@@ -64,18 +72,30 @@ function baixar(urlAtual){
                     out.close(()=>{
 
 
-                        fs.chmodSync(
-                            file,
-                            0o755
-                        );
+                        try{
 
 
-                        console.log(
-                            "✅ yt-dlp atualizado e pronto!"
-                        );
+                            fs.chmodSync(
+                                file,
+                                0o755
+                            );
 
 
-                        resolve();
+                            console.log(
+                                "✅ yt-dlp atualizado e pronto!"
+                            );
+
+
+                            resolve();
+
+
+                        }catch(error){
+
+
+                            reject(error);
+
+
+                        }
 
 
                     });
