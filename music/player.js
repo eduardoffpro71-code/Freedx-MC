@@ -111,7 +111,7 @@ async function playSong(guild, song){
 
 
             "-f",
-            "bestaudio[ext=webm]/bestaudio",
+            "bestaudio/best",
 
 
             "--no-playlist",
@@ -130,36 +130,13 @@ async function playSong(guild, song){
 
 
             "--extractor-args",
-            "youtube:player_client=android",
+            "youtube:player_client=web",
 
 
             "-o",
             "-"
 
         ]);
-
-
-
-        let audioRecebido = false;
-
-
-
-        stream.on(
-            "data",
-            chunk=>{
-
-                if(!audioRecebido){
-
-                    console.log(
-                        "✅ yt-dlp enviando áudio"
-                    );
-
-                    audioRecebido = true;
-
-                }
-
-            }
-        );
 
 
 
@@ -171,7 +148,6 @@ async function playSong(guild, song){
                     "❌ Erro yt-dlp:",
                     err.message
                 );
-
 
                 queue.playing = false;
 
