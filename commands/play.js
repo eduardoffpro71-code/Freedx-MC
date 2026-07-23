@@ -3,94 +3,54 @@ const {
     createAudioPlayer
 } = require("@discordjs/voice");
 
+const play = require("play-dl");
 
-const play =
-require("play-dl");
-
-
-const queues =
-require("../music/queue");
-
+const queues = require("../music/queue");
 
 const {
-    playSong,
-    durationToSeconds
-} =
-require("../music/player");
-
-
-
-
-
+    playSong
+} = require("../music/player");
 
 
 module.exports = {
 
-
     name: "play",
-
-
 
 
     async execute(message, args) {
 
 
-
-        const voice =
-        message.member.voice.channel;
+        const voice = message.member.voice.channel;
 
 
-
-        if(!voice){
-
+        if (!voice) {
             return message.reply(
                 "🎤 Entre em um canal de voz primeiro!"
             );
-
         }
 
 
+        const query = args.join(" ");
 
 
-
-        const query =
-        args.join(" ");
-
-
-
-
-        if(!query){
-
+        if (!query) {
             return message.reply(
                 "🎵 Digite o nome da música ou link!"
             );
-
         }
 
 
-
-
-
-        const loading =
-        await message.reply(
+        const loading = await message.reply(
             "🔎 Procurando música..."
         );
-
-
-
-
-
 
 
         let result;
 
 
+        try {
 
-        try{
-
-
-            result =
-            await play.search(
+            result = await play.search(
                 query,
                 {
                     limit: 1
@@ -98,77 +58,48 @@ module.exports = {
             );
 
 
+        } catch (error) {
 
-        }catch(error){
-
-
-            console.log(error);
-
+            console.log(
+                "❌ Erro busca:",
+                error.message
+            );
 
             return loading.edit(
                 "❌ Erro ao procurar música."
             );
 
-
         }
 
 
 
-
-
-
-
-        if(!result || result.length === 0){
-
+        if (!result || result.length === 0) {
 
             return loading.edit(
                 "❌ Música não encontrada."
             );
 
-
         }
-
-
-
-
-
 
 
 
         const song = {
 
-
-            title:
-            result[0].title,
-
+            title: result[0].title,
 
             url:
             `https://www.youtube.com/watch?v=${result[0].id}`,
 
-
-
             thumbnail:
             result[0].thumbnails?.[0]?.url || null,
-
-
 
             duration:
             result[0].durationRaw || "0:00",
 
-
-
             requestedBy:
             message.author.username
 
-
         };
-
-
-
-
-
-
-
 
 
 
@@ -179,17 +110,11 @@ module.exports = {
 
 
 
-
-
-
-
-
-
-        if(
+        if (
             serverQueue &&
             serverQueue.voiceChannel &&
             serverQueue.voiceChannel.id !== voice.id
-        ){
+        ) {
 
             return loading.edit(
                 "❌ Já estou tocando em outro canal de voz."
@@ -199,14 +124,7 @@ module.exports = {
 
 
 
-
-
-
-
-
-
-        if(!serverQueue){
-
+        if (!serverQueue) {
 
 
             const player =
@@ -214,46 +132,23 @@ module.exports = {
 
 
 
-
-
             const connection =
             joinVoiceChannel({
 
+                channelId: voice.id,
 
-                channelId:
-                voice.id,
-
-
-                guildId:
-                message.guild.id,
-
-
+                guildId: message.guild.id,
 
                 adapterCreator:
                 message.guild.voiceAdapterCreator,
 
-
-
-                selfDeaf:
-                true
-
+                selfDeaf: true
 
             });
 
 
 
-
-
-
-
-            connection.subscribe(
-                player
-            );
-
-
-
-
-
+            connection.subscribe(player);
 
 
 
@@ -262,104 +157,50 @@ module.exports = {
                 message.guild.id,
                 {
 
+                    voiceChannel: voice,
 
-                    voiceChannel:
-                    voice,
-
-
-
-                    textChannel:
-                    message.channel,
-
-
+                    textChannel: message.channel,
 
                     connection,
 
-
-
                     player,
-
-
 
                     songs: [],
 
+                    loop: false,
 
+                    volume: 50,
 
-                    loop:
-                    false,
+                    current: null,
 
+                    startedAt: null,
 
-
-                    volume:
-                    50,
-
-
-                    current:
-                    null,
-
-
-
-                    startedAt:
-                    null,
-
-
-
-                    duration:
-                    0
-
-
+                    duration: 0
 
                 }
             );
-
-
-
-
 
 
             console.log(
                 `🔊 Entrou no canal: ${voice.name}`
             );
 
-
         }
 
 
 
+        serverQueue.songs.push(song);
 
 
 
+        if (!serverQueue.playing) {
 
-
-
-        serverQueue.songs.push(
-            song
-        );
-
-
-
-
-
-
-
-
-
-        if(!serverQueue.current){
-
-
-
-            await playSong(
+            playSong(
                 message.guild,
                 song
             );
 
-
         }
-
-
-
-
-
 
 
 
@@ -368,8 +209,6 @@ module.exports = {
         );
 
 
-
     }
-
 
 };

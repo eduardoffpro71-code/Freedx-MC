@@ -4,233 +4,134 @@ const {
     StreamType
 } = require("@discordjs/voice");
 
+const play = require("play-dl");
 const { spawn } = require("child_process");
-const path = require("path");
-const fs = require("fs");
-
-const ffmpegPath = require("ffmpeg-static");
-
-const YTDlpWrap = require("yt-dlp-wrap").default;
+const ffmpeg = require("ffmpeg-static");
 
 const queues = require("./queue");
 
 
+function durationToSeconds(duration) {
 
-// caminho yt-dlp Railway / local
-let ytDlpPath = "yt-dlp";
-
-const localYt = path.join(
-    __dirname,
-    "..",
-    "yt-dlp"
-);
-
-
-if(fs.existsSync(localYt)){
-    ytDlpPath = localYt;
-}
-
-
-const ytDlp = new YTDlpWrap(ytDlpPath);
-
-
-
-
-function durationToSeconds(duration){
-
-    if(!duration)
-        return 0;
-
+    if (!duration) return 0;
 
     const p = duration.split(":").map(Number);
 
-
-    if(p.length === 2)
+    if (p.length === 2)
         return p[0] * 60 + p[1];
 
-
-    if(p.length === 3)
-        return (
-            p[0] * 3600 +
-            p[1] * 60 +
-            p[2]
-        );
-
+    if (p.length === 3)
+        return p[0] * 3600 + p[1] * 60 + p[2];
 
     return 0;
 }
 
 
 
+async function playSong(guild, song) {
 
+    const queue = queues.getQueue(guild.id);
 
-async function playSong(guild, song){
-
-
-    const queue =
-    queues.getQueue(guild.id);
-
-
-
-    if(!queue)
-        return;
-
-
-
-    if(queue.playing)
-        return;
-
+    if (!queue || !song) return;
 
 
     queue.playing = true;
 
-
-    console.log(
-        `🎵 Tocando: ${song.title}`
-    );
+    console.log(`🎵 Tocando: ${song.title}`);
 
 
 
-    try{
+    try {
 
 
-        const yt =
-        ytDlp.execStream([
+        const stream = await play.stream(song.url);
 
-            song.url,
+
+
+        const ffmpegProcess = spawn(ffmpeg, [
+
+            "-i",
+            "pipe:0",
 
             "-f",
-            "bestaudio",
+            "s16le",
 
-            "--no-playlist",
+            "-ar",
+            "48000",
 
-            "--quiet"
+            "-ac",
+            "2",
+
+            "-loglevel",
+            "error",
+
+            "pipe:1"
 
         ]);
 
 
 
-
-        const ffmpeg =
-        spawn(
-
-            ffmpegPath,
-
-            [
-
-                "-i",
-                "pipe:0",
-
-                "-vn",
-
-                "-f",
-                "s16le",
-
-                "-ar",
-                "48000",
-
-                "-ac",
-                "2",
-
-                "-loglevel",
-                "error",
-
-                "pipe:1"
-
-            ]
-
+        stream.stream.pipe(
+            ffmpegProcess.stdin
         );
 
 
-
-
-        queue.ytProcess = yt;
-
-        queue.ffmpegProcess = ffmpeg;
+        queue.ffmpegProcess = ffmpegProcess;
 
 
 
-
-        yt.pipe(
-            ffmpeg.stdin
-        );
-
-
-
-
-        const resource =
-        createAudioResource(
-
-            ffmpeg.stdout,
-
+        const resource = createAudioResource(
+            ffmpegProcess.stdout,
             {
-
-                inputType:
-                StreamType.Raw,
-
-                inlineVolume:true
-
+                inputType: StreamType.Raw,
+                inlineVolume: true
             }
-
         );
 
 
 
-
-        queue.resource = resource;
-
-        queue.current = song;
-
-
-
-        if(resource.volume){
+        if (resource.volume) {
 
             resource.volume.setVolume(
-                queue.volume / 100
+                (queue.volume || 50) / 100
             );
 
         }
 
 
 
+        queue.resource = resource;
+        queue.current = song;
 
-        queue.player.play(
-            resource
-        );
+        queue.duration =
+        durationToSeconds(song.duration);
 
 
+
+        queue.player.play(resource);
 
 
 
 
         queue.player.once(
-
             AudioPlayerStatus.Playing,
+            () => {
 
-            ()=>{
+                queue.startedAt = Date.now();
 
                 console.log(
                     "▶️ Música começou!"
                 );
 
-
-                queue.startedAt =
-                Date.now();
-
             }
-
         );
 
 
 
 
-
-
         queue.player.once(
-
             AudioPlayerStatus.Idle,
-
-            ()=>{
+            () => {
 
 
                 console.log(
@@ -238,18 +139,34 @@ async function playSong(guild, song){
                 );
 
 
-                queue.playing=false;
+                queue.playing = false;
 
 
-                queue.songs.shift();
+                if (queue.ffmpegProcess) {
+
+                    queue.ffmpegProcess.kill();
+
+                    queue.ffmpegProcess = null;
+
+                }
 
 
-                queue.current=null;
+
+                queue.current = null;
+                queue.startedAt = null;
+                queue.duration = 0;
 
 
 
+                if (!queue.loop) {
 
-                if(queue.songs.length){
+                    queue.songs.shift();
+
+                }
+
+
+
+                if (queue.songs.length > 0) {
 
                     playSong(
                         guild,
@@ -260,63 +177,28 @@ async function playSong(guild, song){
 
 
             }
-
         );
 
 
 
 
-
-
-        yt.on(
-
+        ffmpegProcess.on(
             "error",
-
-            err=>{
-
+            (err) => {
 
                 console.log(
-                    "❌ yt-dlp:",
+                    "❌ Erro FFmpeg:",
                     err.message
                 );
 
-
-                queue.playing=false;
-
+                queue.playing = false;
 
             }
-
         );
 
 
 
-
-
-        ffmpeg.on(
-
-            "error",
-
-            err=>{
-
-
-                console.log(
-                    "❌ ffmpeg:",
-                    err.message
-                );
-
-
-                queue.playing=false;
-
-
-            }
-
-        );
-
-
-
-
-
-    }catch(error){
+    } catch (error) {
 
 
         console.log(
@@ -325,22 +207,16 @@ async function playSong(guild, song){
         );
 
 
-        queue.playing=false;
+        queue.playing = false;
 
 
     }
-
 
 }
 
 
 
-
-
 module.exports = {
-
     playSong,
-
     durationToSeconds
-
 };
