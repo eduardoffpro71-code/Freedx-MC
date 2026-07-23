@@ -4,11 +4,15 @@ const {
     StreamType
 } = require("@discordjs/voice");
 
-const play = require("play-dl");
 const { spawn } = require("child_process");
 const ffmpeg = require("ffmpeg-static");
+const YTDlpWrap = require("yt-dlp-wrap").default;
 
 const queues = require("./queue");
+
+
+const ytDlp = new YTDlpWrap();
+
 
 
 function durationToSeconds(duration) {
@@ -44,7 +48,12 @@ async function playSong(guild, song) {
     try {
 
 
-        const stream = await play.stream(song.url);
+        const stream = ytDlp.execStream([
+            song.url,
+            "-f",
+            "bestaudio",
+            "--no-playlist"
+        ]);
 
 
 
@@ -71,7 +80,7 @@ async function playSong(guild, song) {
 
 
 
-        stream.stream.pipe(
+        stream.pipe(
             ffmpegProcess.stdin
         );
 
@@ -140,6 +149,7 @@ async function playSong(guild, song) {
 
 
                 queue.playing = false;
+
 
 
                 if (queue.ffmpegProcess) {
