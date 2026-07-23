@@ -79,8 +79,8 @@ function durationToSeconds(duration){
 
 
 
-async function playSong(guild, song){
 
+async function playSong(guild, song){
 
     const queue = queues.getQueue(
         guild.id
@@ -93,7 +93,6 @@ async function playSong(guild, song){
 
 
     queue.playing = true;
-
 
 
     console.log(
@@ -112,7 +111,7 @@ async function playSong(guild, song){
 
 
             "-f",
-            "bestaudio/best",
+            "bestaudio[ext=webm]/bestaudio",
 
 
             "--no-playlist",
@@ -137,7 +136,6 @@ async function playSong(guild, song){
             "-o",
             "-"
 
-
         ]);
 
 
@@ -150,18 +148,15 @@ async function playSong(guild, song){
             "data",
             chunk=>{
 
-
                 if(!audioRecebido){
 
                     console.log(
                         "✅ yt-dlp enviando áudio"
                     );
 
-
                     audioRecebido = true;
 
                 }
-
 
             }
         );
@@ -176,6 +171,7 @@ async function playSong(guild, song){
                     "❌ Erro yt-dlp:",
                     err.message
                 );
+
 
                 queue.playing = false;
 
@@ -202,6 +198,9 @@ async function playSong(guild, song){
 
                 "-ac",
                 "2",
+
+
+                "-vn",
 
 
                 "-loglevel",
@@ -270,6 +269,7 @@ async function playSong(guild, song){
         queue.current = song;
 
 
+
         queue.duration =
         durationToSeconds(
             song.duration
@@ -287,7 +287,6 @@ async function playSong(guild, song){
             AudioPlayerStatus.Playing,
             ()=>{
 
-
                 queue.startedAt =
                 Date.now();
 
@@ -295,7 +294,6 @@ async function playSong(guild, song){
                 console.log(
                     "▶️ Música começou!"
                 );
-
 
             }
         );
@@ -346,7 +344,6 @@ async function playSong(guild, song){
                     );
 
                 }
-
 
             }
         );
