@@ -120,13 +120,11 @@ async function playSong(guild, song) {
             song.url,
 
             "-f",
-            "bestaudio*",
+            "bestaudio",
 
             "--no-playlist",
 
             "--no-warnings",
-
-            "--ignore-errors",
 
             "--force-ipv4",
 
@@ -144,9 +142,6 @@ async function playSong(guild, song) {
 
             "--user-agent",
             "Mozilla/5.0",
-
-            "--http-chunk-size",
-            "10M",
 
             "-o",
             "-"
@@ -181,16 +176,16 @@ async function playSong(guild, song) {
                     "-i",
                     "pipe:0",
 
-                    "-f",
-                    "s16le",
-
-                    "-ar",
-                    "48000",
+                    "-vn",
 
                     "-ac",
                     "2",
 
-                    "-vn",
+                    "-ar",
+                    "48000",
+
+                    "-f",
+                    "s16le",
 
                     "-loglevel",
                     "error",
@@ -234,6 +229,21 @@ async function playSong(guild, song) {
 
 
 
+        stream.on(
+            "end",
+            () => {
+
+                if(!ffmpegProcess.stdin.destroyed){
+
+                    ffmpegProcess.stdin.end();
+
+                }
+
+            }
+        );
+
+
+
         ffmpegProcess.stderr.on(
             "data",
             data => {
@@ -242,10 +252,7 @@ async function playSong(guild, song) {
                     data.toString();
 
 
-                if(
-                    !msg.includes("partial file") &&
-                    !msg.includes("Connection reset")
-                ){
+                if(msg.trim()){
 
                     console.log(
                         "FFMPEG:",
