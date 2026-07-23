@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "description": "Bot de música Discord Freedx MC",
   "main": "index.js",
+  "type": "commonjs",
   "scripts": {
     "start": "node install-yt-dlp.js && node index.js"
   },
@@ -13,6 +14,5 @@
     "opusscript": "^0.0.8",
     "play-dl": "^1.9.7",
     "yt-dlp-wrap": "^2.3.12"
-  },
-  "type": "commonjs"
+  }
 }

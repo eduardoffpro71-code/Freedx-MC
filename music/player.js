@@ -28,7 +28,9 @@ if (fs.existsSync(ytDlpPath)) {
             0o755
         );
 
-        console.log("✅ yt-dlp permissão OK");
+        console.log(
+            "✅ yt-dlp permissão OK"
+        );
 
     } catch(err){
 
@@ -59,13 +61,17 @@ function durationToSeconds(duration){
     if(!duration)
         return 0;
 
+
     const p = duration.split(":").map(Number);
+
 
     if(p.length === 2)
         return p[0] * 60 + p[1];
 
+
     if(p.length === 3)
         return p[0] * 3600 + p[1] * 60 + p[2];
+
 
     return 0;
 
@@ -74,8 +80,8 @@ function durationToSeconds(duration){
 
 
 
-async function playSong(guild, song){
 
+async function playSong(guild, song){
 
     const queue = queues.getQueue(
         guild.id
@@ -104,7 +110,7 @@ async function playSong(guild, song){
             song.url,
 
             "-f",
-            "bestaudio",
+            "bestaudio/best",
 
             "--no-playlist",
 
@@ -113,7 +119,10 @@ async function playSong(guild, song){
             "--no-check-certificates",
 
             "--extractor-args",
-            "youtube:player_client=android"
+            "youtube:player_client=android",
+
+            "-o",
+            "-"
 
         ]);
 
@@ -159,7 +168,13 @@ async function playSong(guild, song){
             "end",
             ()=>{
 
-                if(!recebeuAudio){
+                if(recebeuAudio){
+
+                    console.log(
+                        "✅ yt-dlp enviou áudio"
+                    );
+
+                }else{
 
                     console.log(
                         "❌ yt-dlp não enviou áudio"
@@ -169,6 +184,8 @@ async function playSong(guild, song){
 
             }
         );
+
+
 
 
 
@@ -223,12 +240,16 @@ async function playSong(guild, song){
 
 
 
+
         const resource =
         createAudioResource(
             ffmpegProcess.stdout,
             {
+
                 inputType: StreamType.Raw,
+
                 inlineVolume:true
+
             }
         );
 
@@ -263,11 +284,14 @@ async function playSong(guild, song){
 
 
 
+
         queue.player.once(
             AudioPlayerStatus.Playing,
             ()=>{
 
-                queue.startedAt = Date.now();
+                queue.startedAt =
+                Date.now();
+
 
                 console.log(
                     "▶️ Música começou!"
@@ -275,6 +299,8 @@ async function playSong(guild, song){
 
             }
         );
+
+
 
 
 
@@ -329,6 +355,7 @@ async function playSong(guild, song){
 
 
 
+
     } catch(error){
 
 
@@ -340,13 +367,19 @@ async function playSong(guild, song){
 
         queue.playing = false;
 
+
     }
 
 }
 
 
 
+
+
 module.exports = {
+
     playSong,
+
     durationToSeconds
+
 };
