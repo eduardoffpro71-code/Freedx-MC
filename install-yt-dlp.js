@@ -5,7 +5,7 @@ try {
     console.log("⬇️ Instalando yt-dlp...");
 
     execSync(
-        "pip install yt-dlp",
+        "npm install yt-dlp --no-save",
         {
             stdio: "inherit"
         }
