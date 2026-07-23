@@ -6,7 +6,19 @@ const {
 const queues = require("./queue");
 
 
-let config = require("../config.json");
+let config = {};
+
+try {
+
+    config = require("../config.json");
+
+} catch {
+
+    console.log(
+        "⚠️ config.json não encontrado, usando Railway Variables"
+    );
+
+}
 
 
 let updaterStarted = false;
@@ -14,7 +26,6 @@ let updaterStarted = false;
 
 
 function formatTime(seconds){
-
 
     if(!seconds || seconds < 0){
 
@@ -40,9 +51,7 @@ function formatTime(seconds){
 
 
 
-
 function progressBar(current,total){
-
 
     const size = 20;
 
@@ -54,7 +63,6 @@ function progressBar(current,total){
     }
 
 
-
     const percent =
     Math.min(
         current / total,
@@ -62,12 +70,10 @@ function progressBar(current,total){
     );
 
 
-
     const position =
     Math.floor(
         size * percent
     );
-
 
 
     return (
@@ -86,10 +92,7 @@ function progressBar(current,total){
 
 
 
-
-
 async function updatePanel(client, queue){
-
 
 
     if(
@@ -103,11 +106,18 @@ async function updatePanel(client, queue){
 
 
 
+    const panelChannel =
+    process.env.PANEL_CHANNEL || config.panelChannel;
+
+
+    const panelMessage =
+    process.env.PANEL_MESSAGE || config.panelMessage;
+
 
 
     if(
-        !config.panelChannel ||
-        !config.panelMessage
+        !panelChannel ||
+        !panelMessage
     ){
 
         return;
@@ -118,16 +128,13 @@ async function updatePanel(client, queue){
 
 
 
-
     try{
-
 
 
         const canal =
         await client.channels.fetch(
-            config.panelChannel
+            panelChannel
         );
-
 
 
         if(!canal)
@@ -136,14 +143,10 @@ async function updatePanel(client, queue){
 
 
 
-
-
         const mensagem =
         await canal.messages.fetch(
-            config.panelMessage
+            panelMessage
         );
-
-
 
 
 
@@ -161,22 +164,14 @@ async function updatePanel(client, queue){
 
 
 
-
-
         const embed =
         new EmbedBuilder()
 
-
-
         .setColor("#00FFFF")
-
-
 
         .setTitle(
             "🎵 Freedx MC • Tocando Agora"
         )
-
-
 
         .setDescription(
 
@@ -213,8 +208,6 @@ queue.loop
 
         )
 
-
-
         .setFooter({
 
             text:
@@ -222,11 +215,7 @@ queue.loop
 
         })
 
-
-
         .setTimestamp();
-
-
 
 
 
@@ -243,7 +232,6 @@ queue.loop
 
 
 
-
         await mensagem.edit({
 
             embeds:[
@@ -251,9 +239,6 @@ queue.loop
             ]
 
         });
-
-
-
 
 
 
@@ -276,11 +261,7 @@ queue.loop
 
 
 
-
-
-
 function startPanelUpdater(client){
-
 
 
     if(updaterStarted)
@@ -303,9 +284,7 @@ function startPanelUpdater(client){
     setInterval(async()=>{
 
 
-
         try{
-
 
 
             for(
@@ -322,9 +301,7 @@ function startPanelUpdater(client){
             }
 
 
-
         }catch(error){
-
 
 
             console.log(
@@ -334,7 +311,6 @@ function startPanelUpdater(client){
 
 
         }
-
 
 
     },5000);
@@ -348,22 +324,14 @@ function startPanelUpdater(client){
 
 
 
-
-
-
 module.exports = {
-
 
     startPanelUpdater,
 
-
     updatePanel,
-
 
     formatTime,
 
-
     progressBar
-
 
 };
