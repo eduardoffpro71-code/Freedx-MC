@@ -4,16 +4,18 @@ async function install() {
 
     try {
 
-        console.log("⬇️ Baixando yt-dlp...");
+        console.log("⬇️ Baixando yt-dlp standalone...");
 
-        await YTDlpWrap.downloadFromGithub();
+        await YTDlpWrap.downloadFromGithub(
+            "yt-dlp"
+        );
 
-        console.log("✅ yt-dlp pronto!");
+        console.log("✅ yt-dlp standalone pronto!");
 
     } catch (error) {
 
         console.log(
-            "❌ Erro baixando yt-dlp:",
+            "❌ Erro yt-dlp:",
             error.message
         );
 

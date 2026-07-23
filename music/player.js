@@ -5,21 +5,15 @@ const {
 } = require("@discordjs/voice");
 
 const { spawn } = require("child_process");
-const path = require("path");
 const ffmpeg = require("ffmpeg-static");
 const YTDlpWrap = require("yt-dlp-wrap").default;
 
 const queues = require("./queue");
 
 
-const ytDlpPath = path.join(
-    process.cwd(),
-    "yt-dlp"
-);
-
-
+// usa o yt-dlp baixado pelo install-yt-dlp.js
 const ytDlp = new YTDlpWrap(
-    ytDlpPath
+    "yt-dlp"
 );
 
 
@@ -60,7 +54,8 @@ async function playSong(guild, song) {
             song.url,
             "-f",
             "bestaudio",
-            "--no-playlist"
+            "--no-playlist",
+            "--extract-audio"
         ]);
 
 
@@ -148,14 +143,12 @@ async function playSong(guild, song) {
             AudioPlayerStatus.Idle,
             () => {
 
-
                 console.log(
                     "⏹️ Música terminou"
                 );
 
 
                 queue.playing = false;
-
 
 
                 if (queue.ffmpegProcess) {
@@ -165,7 +158,6 @@ async function playSong(guild, song) {
                     queue.ffmpegProcess = null;
 
                 }
-
 
 
                 queue.current = null;
@@ -213,7 +205,6 @@ async function playSong(guild, song) {
 
 
     } catch (error) {
-
 
         console.log(
             "❌ Erro player:",
