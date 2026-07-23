@@ -104,12 +104,12 @@ async function playSong(guild, song){
     try{
 
 
-        const stream = ytDlp.execStream([
+const stream = ytDlp.execStream([
 
     song.url,
 
     "-f",
-    "bestaudio[ext=m4a]/bestaudio/best",
+    "bestaudio/best",
 
     "--no-playlist",
 
@@ -122,10 +122,12 @@ async function playSong(guild, song){
     "--geo-bypass",
 
     "--cookies",
-    "cookies.txt",
+    path.join(process.cwd(), "cookies.txt"),
 
     "--extractor-args",
-    "youtube:player_client=android",
+    "youtube:player_client=android,web",
+
+    "--no-part",
 
     "-o",
     "-"
@@ -204,39 +206,31 @@ async function playSong(guild, song){
 
 
 
-        queue.ffmpegProcess =
-        ffmpegProcess;
+queue.ffmpegProcess =
+ffmpegProcess;
 
 
-
-        const resource =
-        createAudioResource(
-            ffmpegProcess.stdout,
-            {
-
-                inputType:
-                StreamType.Raw,
-
-                inlineVolume:true
-
-            }
-        );
+const resource =
+createAudioResource(
+    ffmpegProcess.stdout,
+    {
+        inputType: StreamType.Raw,
+        inlineVolume: true
+    }
+);
 
 
+if(resource.volume){
 
-        if(resource.volume){
+    resource.volume.setVolume(
+        (queue.volume || 50) / 100
+    );
 
-            resource.volume.setVolume(
-                (queue.volume || 50) / 100
-            );
-
-        }
-
+}
 
 
-        queue.resource = resource;
-
-        queue.current = song;
+queue.resource = resource;
+queue.current = song;
 
 
 
