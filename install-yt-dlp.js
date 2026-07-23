@@ -1,87 +1,88 @@
 const fs = require("fs");
 const https = require("https");
-const path = require("path");
-const { execSync } = require("child_process");
+
+const file = "yt-dlp";
+
+const url =
+"https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp_linux";
 
 
-const file = path.join(
-    process.cwd(),
-    "yt-dlp"
-);
+function download(){
+
+    console.log("⬇️ Baixando yt-dlp atualizado...");
 
 
-function download(url){
-
-    return new Promise((resolve,reject)=>{
-
-        const out = fs.createWriteStream(file);
+    const stream = fs.createWriteStream(file);
 
 
-        https.get(url,(res)=>{
-
-            res.pipe(out);
+    https.get(url, response => {
 
 
-            out.on("finish",()=>{
+        response.pipe(stream);
 
-                out.close();
 
-                fs.chmodSync(
-                    file,
-                    0o755
-                );
+        stream.on("finish", ()=>{
 
-                resolve();
+            stream.close(()=>{
+
+
+                try {
+
+                    fs.chmodSync(
+                        file,
+                        0o755
+                    );
+
+                    console.log(
+                        "✅ yt-dlp atualizado e pronto!"
+                    );
+
+
+                } catch(err){
+
+                    console.log(
+                        "❌ Erro permissão:",
+                        err.message
+                    );
+
+                }
+
 
             });
 
 
-        }).on("error",reject);
+        });
 
-    });
+
+    }).on(
+        "error",
+        err=>{
+
+            console.log(
+                "❌ Erro download yt-dlp:",
+                err.message
+            );
+
+        }
+    );
 
 }
 
 
 
-(async()=>{
+if(!fs.existsSync(file)){
 
-    try{
+    download();
 
-        if(fs.existsSync(file)){
+}else{
 
-            console.log(
-                "✅ yt-dlp já existe!"
-            );
+    fs.chmodSync(
+        file,
+        0o755
+    );
 
-            process.exit();
+    console.log(
+        "✅ yt-dlp já existe"
+    );
 
-        }
-
-
-        console.log(
-            "⬇️ Baixando yt-dlp standalone..."
-        );
-
-
-        await download(
-            "https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp_linux"
-        );
-
-
-        console.log(
-            "✅ yt-dlp standalone pronto!"
-        );
-
-
-    }catch(err){
-
-        console.log(
-            "❌ Erro baixando yt-dlp:",
-            err.message
-        );
-
-    }
-
-
-})();
+}
