@@ -82,17 +82,16 @@ async function playSong(guild, song) {
 
             song.url,
 
-
             "-f",
-            "bestaudio/best",
-
+            "ba[ext=m4a]/ba[ext=webm]/ba/best",
 
             "--no-playlist",
 
             "--no-warnings",
 
-            "--force-ipv4",
+            "--ignore-errors",
 
+            "--force-ipv4",
 
             "--retries",
             "20",
@@ -100,22 +99,14 @@ async function playSong(guild, song) {
             "--fragment-retries",
             "20",
 
-
             "--socket-timeout",
             "60",
 
-
             "--extractor-args",
-            "youtube:player_client=web",
+            "youtube:player_client=android",
 
-
-            "--remote-components",
-            "ejs:github",
-
-
-            "--js-runtimes",
-            "node",
-
+            "--user-agent",
+            "Mozilla/5.0",
 
             "--output",
             "-"
@@ -203,27 +194,19 @@ async function playSong(guild, song) {
                 if(ffmpegProcess)
                     ffmpegProcess.kill();
 
-            }
-        );
 
+                setTimeout(()=>{
 
+                    if(queue.songs.length){
 
-        ffmpegProcess.stderr.on(
-            "data",
-            data => {
+                        playSong(
+                            guild,
+                            queue.songs[0]
+                        );
 
-                const msg =
-                    data.toString();
+                    }
 
-
-                if(msg.trim()){
-
-                    console.log(
-                        "FFMPEG:",
-                        msg
-                    );
-
-                }
+                },3000);
 
             }
         );
@@ -254,7 +237,6 @@ async function playSong(guild, song) {
         queue.resource = resource;
 
         queue.current = song;
-
 
 
         queue.duration =
@@ -300,7 +282,6 @@ async function playSong(guild, song) {
                 queue.playing = false;
 
 
-
                 if(queue.ffmpegProcess){
 
                     queue.ffmpegProcess.kill();
@@ -318,24 +299,20 @@ async function playSong(guild, song) {
                 }
 
 
-
                 queue.current = null;
 
 
 
                 if(queue.songs.length){
 
-                    setTimeout(
-                        ()=>{
+                    setTimeout(()=>{
 
-                            playSong(
-                                guild,
-                                queue.songs[0]
-                            );
+                        playSong(
+                            guild,
+                            queue.songs[0]
+                        );
 
-                        },
-                        1000
-                    );
+                    },1000);
 
                 }
 
