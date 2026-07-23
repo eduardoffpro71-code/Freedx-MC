@@ -101,7 +101,13 @@ async function playSong(guild, song){
 
 
 
-    try{
+try{
+
+
+console.log(
+    "🍪 Cookies existe:",
+    fs.existsSync("/app/cookies.txt")
+);
 
 
 const stream = ytDlp.execStream([
@@ -122,10 +128,13 @@ const stream = ytDlp.execStream([
     "--geo-bypass",
 
     "--cookies",
-    path.resolve(__dirname, "../cookies.txt"),
+    path.join(process.cwd(), "cookies.txt"),
 
     "--extractor-args",
     "youtube:player_client=tv",
+
+    "--user-agent",
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/120 Safari/537.36",
 
     "--no-part",
 
@@ -133,7 +142,6 @@ const stream = ytDlp.execStream([
     "-"
 
 ]);
-
 
 
         stream.on(
