@@ -20,7 +20,9 @@ const ytDlpPath = path.join(
 
 
 if (fs.existsSync(ytDlpPath)) {
+
     try {
+
         fs.chmodSync(
             ytDlpPath,
             0o755
@@ -29,11 +31,14 @@ if (fs.existsSync(ytDlpPath)) {
         console.log("✅ yt-dlp permissão OK");
 
     } catch(err){
+
         console.log(
             "❌ Erro permissão:",
             err.message
         );
+
     }
+
 }
 
 
@@ -56,16 +61,14 @@ function durationToSeconds(duration){
 
     const p = duration.split(":").map(Number);
 
-
     if(p.length === 2)
         return p[0] * 60 + p[1];
-
 
     if(p.length === 3)
         return p[0] * 3600 + p[1] * 60 + p[2];
 
-
     return 0;
+
 }
 
 
@@ -101,7 +104,7 @@ async function playSong(guild, song){
             song.url,
 
             "-f",
-            "bestaudio[ext=webm]/bestaudio",
+            "bestaudio",
 
             "--no-playlist",
 
@@ -116,12 +119,18 @@ async function playSong(guild, song){
 
 
 
+        let recebeuAudio = false;
+
+
+
         stream.on(
             "data",
             chunk => {
 
+                recebeuAudio = true;
+
                 console.log(
-                    "📦 Recebendo áudio:",
+                    "📦 Áudio recebido:",
                     chunk.length
                 );
 
@@ -138,6 +147,25 @@ async function playSong(guild, song){
                     "❌ Erro yt-dlp:",
                     err.message
                 );
+
+                queue.playing = false;
+
+            }
+        );
+
+
+
+        stream.on(
+            "end",
+            ()=>{
+
+                if(!recebeuAudio){
+
+                    console.log(
+                        "❌ yt-dlp não enviou áudio"
+                    );
+
+                }
 
             }
         );
@@ -172,7 +200,7 @@ async function playSong(guild, song){
 
         ffmpegProcess.stderr.on(
             "data",
-            data => {
+            data=>{
 
                 console.log(
                     "FFMPEG:",
@@ -239,9 +267,7 @@ async function playSong(guild, song){
             AudioPlayerStatus.Playing,
             ()=>{
 
-                queue.startedAt =
-                Date.now();
-
+                queue.startedAt = Date.now();
 
                 console.log(
                     "▶️ Música começou!"
@@ -297,12 +323,14 @@ async function playSong(guild, song){
 
                 }
 
+
             }
         );
 
 
 
     } catch(error){
+
 
         console.log(
             "❌ Erro player:",
