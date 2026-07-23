@@ -23,6 +23,7 @@ const ytDlp = new YTDlpWrap(
 
 
 function durationToSeconds(duration) {
+
     if (!duration)
         return 0;
 
@@ -36,6 +37,7 @@ function durationToSeconds(duration) {
 
     return 0;
 }
+
 
 
 async function playSong(guild, song) {
@@ -65,10 +67,11 @@ async function playSong(guild, song) {
 
 
         const args = [
+
             song.url,
 
             "-f",
-            "bestaudio/best",
+            "best/bestaudio/best",
 
             "--no-playlist",
 
@@ -88,11 +91,13 @@ async function playSong(guild, song) {
             "60",
 
             "--extractor-args",
-            "youtube:player_client=android,web",
+            "youtube:player_client=android",
 
             "-o",
             "-"
+
         ];
+
 
 
         if(fs.existsSync(cookies)) {
@@ -108,16 +113,19 @@ async function playSong(guild, song) {
         }
 
 
+
         const stream =
             ytDlp.execStream(
                 args
             );
 
 
+
         const ffmpegProcess =
             spawn(
                 ffmpeg,
                 [
+
                     "-i",
                     "pipe:0",
 
@@ -136,17 +144,21 @@ async function playSong(guild, song) {
                     "error",
 
                     "pipe:1"
+
                 ]
             );
+
 
 
         queue.ffmpegProcess =
             ffmpegProcess;
 
 
+
         stream.pipe(
             ffmpegProcess.stdin
         );
+
 
 
         stream.on(
@@ -160,12 +172,14 @@ async function playSong(guild, song) {
 
                 queue.playing = false;
 
+
                 try {
                     ffmpegProcess.kill();
                 } catch {}
 
             }
         );
+
 
 
         ffmpegProcess.on(
@@ -181,6 +195,7 @@ async function playSong(guild, song) {
         );
 
 
+
         const resource =
             createAudioResource(
                 ffmpegProcess.stdout,
@@ -189,6 +204,7 @@ async function playSong(guild, song) {
                     inlineVolume: true
                 }
             );
+
 
 
         if(resource.volume) {
@@ -200,8 +216,10 @@ async function playSong(guild, song) {
         }
 
 
+
         queue.resource = resource;
         queue.current = song;
+
 
 
         queue.player.removeAllListeners(
@@ -213,9 +231,11 @@ async function playSong(guild, song) {
         );
 
 
+
         queue.player.play(
             resource
         );
+
 
 
         queue.player.once(
@@ -233,6 +253,7 @@ async function playSong(guild, song) {
         );
 
 
+
         queue.player.once(
             AudioPlayerStatus.Idle,
             () => {
@@ -245,6 +266,7 @@ async function playSong(guild, song) {
                 queue.playing = false;
 
 
+
                 if(queue.ffmpegProcess) {
 
                     try {
@@ -255,12 +277,17 @@ async function playSong(guild, song) {
                 }
 
 
+
                 if(!queue.loop) {
+
                     queue.songs.shift();
+
                 }
 
 
+
                 queue.current = null;
+
 
 
                 if(queue.songs.length) {
@@ -283,6 +310,7 @@ async function playSong(guild, song) {
         );
 
 
+
     } catch(error) {
 
         console.log(
@@ -295,6 +323,7 @@ async function playSong(guild, song) {
     }
 
 }
+
 
 
 module.exports = {
