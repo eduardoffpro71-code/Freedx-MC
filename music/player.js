@@ -70,6 +70,9 @@ async function playSong(guild, song) {
 
             song.url,
 
+            "-f",
+            "18",
+
             "--no-playlist",
 
             "--no-warnings",
@@ -88,7 +91,7 @@ async function playSong(guild, song) {
             "60",
 
             "--extractor-args",
-            "youtube:player_client=web_safari",
+            "youtube:player_client=android",
 
             "-o",
             "-"
