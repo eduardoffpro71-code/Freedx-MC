@@ -1,14 +1,35 @@
 process.env.FFMPEG_PATH = require("ffmpeg-static");
 
+
 const {
     Client,
     GatewayIntentBits,
     Collection
 } = require("discord.js");
 
+
 const fs = require("fs");
 
-const config = require("./config.json");
+
+// ==========================
+// CONFIG
+// ==========================
+
+let config = {};
+
+try {
+
+    config = require("./config.json");
+
+} catch {
+
+    console.log(
+        "⚠️ config.json não encontrado, usando Railway Variables"
+    );
+
+}
+
+
 
 
 let settings = {
@@ -17,8 +38,11 @@ let settings = {
 
 
 if (fs.existsSync("./settings.json")) {
+
     settings = require("./settings.json");
+
 }
+
 
 
 
@@ -45,6 +69,7 @@ client.commands = new Collection();
 
 
 
+
 // ==========================
 // CARREGAR COMANDOS
 // ==========================
@@ -52,6 +77,7 @@ client.commands = new Collection();
 const commandFiles = fs
 .readdirSync("./commands")
 .filter(file => file.endsWith(".js"));
+
 
 
 for (const file of commandFiles) {
@@ -68,6 +94,7 @@ for (const file of commandFiles) {
 
 
 }
+
 
 
 
@@ -112,6 +139,8 @@ for (const file of eventFiles) {
 
 
 }
+
+
 
 
 
@@ -180,11 +209,6 @@ async message=>{
         );
 
 
-        message.reply(
-            "❌ Erro ao executar comando."
-        ).catch(()=>{});
-
-
     }
 
 
@@ -211,6 +235,7 @@ error=>{
 });
 
 
+
 process.on(
 "uncaughtException",
 error=>{
@@ -231,7 +256,20 @@ error=>{
 // LOGIN
 // ==========================
 
-client.login(config.token)
+
+client.login(
+    process.env.TOKEN || config.token
+)
+
+
+.then(()=>{
+
+    console.log(
+        "🚀 Login realizado!"
+    );
+
+})
+
 
 .catch(error=>{
 
