@@ -120,11 +120,13 @@ async function playSong(guild, song) {
             song.url,
 
             "-f",
-            "bestaudio",
+            "ba[protocol=https]/ba/best",
 
             "--no-playlist",
 
             "--no-warnings",
+
+            "--ignore-errors",
 
             "--force-ipv4",
 
@@ -138,10 +140,13 @@ async function playSong(guild, song) {
             "60",
 
             "--extractor-args",
-            "youtube:player_client=android",
+            "youtube:player_client=web",
 
             "--user-agent",
             "Mozilla/5.0",
+
+            "--http-chunk-size",
+            "5M",
 
             "-o",
             "-"
@@ -229,21 +234,6 @@ async function playSong(guild, song) {
 
 
 
-        stream.on(
-            "end",
-            () => {
-
-                if(!ffmpegProcess.stdin.destroyed){
-
-                    ffmpegProcess.stdin.end();
-
-                }
-
-            }
-        );
-
-
-
         ffmpegProcess.stderr.on(
             "data",
             data => {
@@ -252,7 +242,10 @@ async function playSong(guild, song) {
                     data.toString();
 
 
-                if(msg.trim()){
+                if(
+                    !msg.includes("partial file") &&
+                    !msg.includes("Connection reset")
+                ){
 
                     console.log(
                         "FFMPEG:",
@@ -326,7 +319,6 @@ async function playSong(guild, song) {
         queue.player.once(
             AudioPlayerStatus.Idle,
             () => {
-
 
                 console.log(
                     "⏹️ Música terminou"
