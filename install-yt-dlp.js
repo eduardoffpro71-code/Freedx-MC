@@ -1,7 +1,11 @@
 const fs = require("fs");
 const https = require("https");
+const path = require("path");
 
-const file = "./yt-dlp";
+const file = path.join(
+    process.cwd(),
+    "yt-dlp"
+);
 
 const url =
 "https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp_linux";
@@ -11,21 +15,16 @@ function baixar(urlAtual, primeira = true){
 
     return new Promise((resolve, reject)=>{
 
-
         if(primeira){
-
             console.log(
-                "⬇️ Baixando yt-dlp atualizado..."
+                "⬇️ Baixando yt-dlp..."
             );
-
         }
-
 
 
         https.get(urlAtual, res=>{
 
 
-            // segue redirect do GitHub
             if(
                 res.statusCode >= 300 &&
                 res.statusCode < 400 &&
@@ -40,7 +39,6 @@ function baixar(urlAtual, primeira = true){
                 .catch(reject);
 
             }
-
 
 
             if(res.statusCode !== 200){
@@ -59,7 +57,6 @@ function baixar(urlAtual, primeira = true){
             fs.createWriteStream(file);
 
 
-
             res.pipe(out);
 
 
@@ -68,12 +65,9 @@ function baixar(urlAtual, primeira = true){
                 "finish",
                 ()=>{
 
-
                     out.close(()=>{
 
-
                         try{
-
 
                             fs.chmodSync(
                                 file,
@@ -82,28 +76,23 @@ function baixar(urlAtual, primeira = true){
 
 
                             console.log(
-                                "✅ yt-dlp atualizado e pronto!"
+                                "✅ yt-dlp pronto!"
                             );
 
 
                             resolve();
 
 
-                        }catch(error){
+                        }catch(err){
 
-
-                            reject(error);
-
+                            reject(err);
 
                         }
 
-
                     });
-
 
                 }
             );
-
 
 
         })
@@ -112,7 +101,6 @@ function baixar(urlAtual, primeira = true){
             reject
         );
 
-
     });
 
 }
@@ -120,11 +108,20 @@ function baixar(urlAtual, primeira = true){
 
 
 baixar(url)
-.catch(err=>{
+.then(()=>{
 
     console.log(
-        "❌ Erro yt-dlp:",
+        "🚀 Continuando inicialização do bot..."
+    );
+
+})
+.catch(err=>{
+
+    console.error(
+        "❌ Erro ao instalar yt-dlp:",
         err.message
     );
+
+    process.exit(1);
 
 });

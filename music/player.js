@@ -19,20 +19,18 @@ const ytDlpPath = path.join(
 );
 
 
-if(fs.existsSync(ytDlpPath)){
+if (fs.existsSync(ytDlpPath)) {
 
-    try{
+    try {
 
         fs.chmodSync(
             ytDlpPath,
             0o755
         );
 
-        console.log(
-            "✅ yt-dlp permissão OK"
-        );
+        console.log("✅ yt-dlp permissão OK");
 
-    }catch(e){
+    } catch (e) {
 
         console.log(
             "❌ Erro permissão:",
@@ -56,20 +54,20 @@ const ytDlp = new YTDlpWrap(
 
 
 
-function durationToSeconds(duration){
+function durationToSeconds(duration) {
 
-    if(!duration)
+    if (!duration)
         return 0;
 
 
     const p = duration.split(":").map(Number);
 
 
-    if(p.length === 2)
+    if (p.length === 2)
         return p[0] * 60 + p[1];
 
 
-    if(p.length === 3)
+    if (p.length === 3)
         return p[0] * 3600 + p[1] * 60 + p[2];
 
 
@@ -80,16 +78,15 @@ function durationToSeconds(duration){
 
 
 
-async function playSong(guild, song){
+async function playSong(guild, song) {
 
     const queue = queues.getQueue(
         guild.id
     );
 
 
-    if(!queue || !song)
+    if (!queue || !song)
         return;
-
 
 
     queue.playing = true;
@@ -100,53 +97,71 @@ async function playSong(guild, song){
     );
 
 
+    try {
 
-try{
-
-
-console.log(
-    "🍪 Cookies existe:",
-    fs.existsSync("/app/cookies.txt")
-);
+        const cookies = path.join(
+            process.cwd(),
+            "cookies.txt"
+        );
 
 
-const stream = ytDlp.execStream([
+        console.log(
+            "🍪 Cookies:",
+            fs.existsSync(cookies)
+        );
 
-    song.url,
 
-    "-f",
-    "bestaudio/best",
+        const args = [
 
-    "--no-playlist",
+            song.url,
 
-    "--no-warnings",
+            "-f",
+            "bestaudio/best",
 
-    "--no-check-certificates",
+            "--no-playlist",
 
-    "--force-ipv4",
+            "--no-warnings",
 
-    "--geo-bypass",
+            "--no-check-certificates",
 
-    "--cookies",
-    path.join(process.cwd(), "cookies.txt"),
+            "--force-ipv4",
 
-    "--extractor-args",
-    "youtube:player_client=android_vr",
+            "--geo-bypass",
 
-    "--user-agent",
-    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/120 Safari/537.36",
+            "--extractor-args",
+            "youtube:player_client=android,web",
 
-    "--no-part",
+            "--user-agent",
+            "Mozilla/5.0",
 
-    "-o",
-    "-"
+            "--no-part",
 
-]);
+            "-o",
+            "-"
+
+        ];
+
+
+        if (fs.existsSync(cookies)) {
+
+            args.push(
+                "--cookies",
+                cookies
+            );
+
+        }
+
+
+
+        const stream = ytDlp.execStream(
+            args
+        );
+
 
 
         stream.on(
             "error",
-            err=>{
+            err => {
 
                 console.log(
                     "❌ Erro yt-dlp:",
@@ -167,25 +182,19 @@ const stream = ytDlp.execStream([
                 "-i",
                 "pipe:0",
 
-
                 "-f",
                 "s16le",
-
 
                 "-ar",
                 "48000",
 
-
                 "-ac",
                 "2",
 
-
                 "-vn",
-
 
                 "-loglevel",
                 "error",
-
 
                 "pipe:1"
 
@@ -196,7 +205,7 @@ const stream = ytDlp.execStream([
 
         ffmpegProcess.stderr.on(
             "data",
-            data=>{
+            data => {
 
                 console.log(
                     "FFMPEG:",
@@ -214,38 +223,41 @@ const stream = ytDlp.execStream([
 
 
 
-queue.ffmpegProcess =
-ffmpegProcess;
+        queue.ffmpegProcess =
+            ffmpegProcess;
 
 
-const resource =
-createAudioResource(
-    ffmpegProcess.stdout,
-    {
-        inputType: StreamType.Raw,
-        inlineVolume: true
-    }
-);
+
+        const resource =
+            createAudioResource(
+                ffmpegProcess.stdout,
+                {
+                    inputType: StreamType.Raw,
+                    inlineVolume: true
+                }
+            );
 
 
-if(resource.volume){
 
-    resource.volume.setVolume(
-        (queue.volume || 50) / 100
-    );
+        if (resource.volume) {
 
-}
+            resource.volume.setVolume(
+                (queue.volume || 50) / 100
+            );
+
+        }
 
 
-queue.resource = resource;
-queue.current = song;
 
+        queue.resource = resource;
+
+        queue.current = song;
 
 
         queue.duration =
-        durationToSeconds(
-            song.duration
-        );
+            durationToSeconds(
+                song.duration
+            );
 
 
 
@@ -257,10 +269,10 @@ queue.current = song;
 
         queue.player.once(
             AudioPlayerStatus.Playing,
-            ()=>{
+            () => {
 
                 queue.startedAt =
-                Date.now();
+                    Date.now();
 
 
                 console.log(
@@ -274,8 +286,7 @@ queue.current = song;
 
         queue.player.once(
             AudioPlayerStatus.Idle,
-            ()=>{
-
+            () => {
 
                 console.log(
                     "⏹️ Música terminou"
@@ -286,7 +297,7 @@ queue.current = song;
 
 
 
-                if(queue.ffmpegProcess){
+                if (queue.ffmpegProcess) {
 
                     queue.ffmpegProcess.kill();
 
@@ -296,7 +307,7 @@ queue.current = song;
 
 
 
-                if(!queue.loop){
+                if (!queue.loop) {
 
                     queue.songs.shift();
 
@@ -308,7 +319,7 @@ queue.current = song;
 
 
 
-                if(queue.songs.length){
+                if (queue.songs.length) {
 
                     playSong(
                         guild,
@@ -321,9 +332,7 @@ queue.current = song;
         );
 
 
-
-    }catch(error){
-
+    } catch (error) {
 
         console.log(
             "❌ Erro player:",
@@ -332,7 +341,6 @@ queue.current = song;
 
 
         queue.playing = false;
-
 
     }
 
