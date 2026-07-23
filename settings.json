@@ -1,0 +1,9 @@
+{
+    "botName": "Freedx MC",
+    "prefix": "!",
+    "djRole": "DJ",
+    "defaultVolume": 50,
+    "activity": "!help | Freedx MC",
+    "language": "pt-BR",
+    "welcomeChannel": "1529404511880478841"
+}

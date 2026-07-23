@@ -1,0 +1,20 @@
+{
+  "name": "freedx-mc",
+  "version": "1.0.0",
+  "description": "Bot de música Discord Freedx MC",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "dependencies": {
+    "@discordjs/voice": "^0.19.2",
+    "discord.js": "^14.27.0",
+    "ffmpeg-static": "^5.3.0",
+    "opusscript": "^0.0.8",
+    "play-dl": "^1.9.7"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs"
+}
