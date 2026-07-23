@@ -19,41 +19,9 @@ const ytDlpPath = path.join(
 );
 
 
-if (fs.existsSync(ytDlpPath)) {
-
-    try {
-
-        fs.chmodSync(
-            ytDlpPath,
-            0o755
-        );
-
-        console.log(
-            "✅ yt-dlp permissão OK"
-        );
-
-    } catch (e) {
-
-        console.log(
-            "❌ Erro permissão:",
-            e.message
-        );
-
-    }
-
-}
-
-
-console.log(
-    "🎵 yt-dlp:",
-    ytDlpPath
-);
-
-
 const ytDlp = new YTDlpWrap(
     ytDlpPath
 );
-
 
 
 function durationToSeconds(duration) {
@@ -61,22 +29,16 @@ function durationToSeconds(duration) {
     if (!duration)
         return 0;
 
-
     const p = duration.split(":").map(Number);
-
 
     if (p.length === 2)
         return p[0] * 60 + p[1];
 
-
     if (p.length === 3)
         return p[0] * 3600 + p[1] * 60 + p[2];
 
-
     return 0;
-
 }
-
 
 
 
@@ -108,54 +70,39 @@ async function playSong(guild, song) {
         );
 
 
-        console.log(
-            "🍪 Cookies:",
-            fs.existsSync(cookies)
-        );
-
-
-
         const args = [
 
             song.url,
 
             "-f",
-            "ba[protocol=https]/ba/best",
+            "bestaudio/best",
 
             "--no-playlist",
 
             "--no-warnings",
 
-            "--ignore-errors",
-
             "--force-ipv4",
 
             "--retries",
-            "20",
+            "10",
 
             "--fragment-retries",
-            "20",
+            "10",
 
             "--socket-timeout",
             "60",
 
             "--extractor-args",
-            "youtube:player_client=web",
+            "youtube:player_client=android",
 
-            "--user-agent",
-            "Mozilla/5.0",
-
-            "--http-chunk-size",
-            "5M",
-
-            "-o",
+            "--output",
             "-"
 
         ];
 
 
 
-        if(fs.existsSync(cookies)) {
+        if(fs.existsSync(cookies)){
 
             args.push(
                 "--cookies",
@@ -218,39 +165,27 @@ async function playSong(guild, song) {
             err => {
 
                 console.log(
-                    "❌ Erro yt-dlp:",
+                    "❌ yt-dlp:",
                     err.message
                 );
 
 
                 queue.playing = false;
 
-
-                if(ffmpegProcess)
-                    ffmpegProcess.kill();
+                ffmpegProcess.kill();
 
             }
         );
 
 
 
-        ffmpegProcess.stderr.on(
-            "data",
-            data => {
+        ffmpegProcess.on(
+            "close",
+            () => {
 
-                const msg =
-                    data.toString();
+                if(queue.playing){
 
-
-                if(
-                    !msg.includes("partial file") &&
-                    !msg.includes("Connection reset")
-                ){
-
-                    console.log(
-                        "FFMPEG:",
-                        msg
-                    );
+                    queue.player.stop();
 
                 }
 
@@ -264,7 +199,7 @@ async function playSong(guild, song) {
                 ffmpegProcess.stdout,
                 {
                     inputType: StreamType.Raw,
-                    inlineVolume: true
+                    inlineVolume:true
                 }
             );
 
@@ -283,7 +218,6 @@ async function playSong(guild, song) {
         queue.resource = resource;
 
         queue.current = song;
-
 
 
         queue.duration =
@@ -320,6 +254,7 @@ async function playSong(guild, song) {
             AudioPlayerStatus.Idle,
             () => {
 
+
                 console.log(
                     "⏹️ Música terminou"
                 );
@@ -354,7 +289,7 @@ async function playSong(guild, song) {
                 if(queue.songs.length){
 
                     setTimeout(
-                        () => {
+                        ()=>{
 
                             playSong(
                                 guild,
@@ -371,9 +306,7 @@ async function playSong(guild, song) {
         );
 
 
-
-    } catch(error) {
-
+    } catch(error){
 
         console.log(
             "❌ Erro player:",
