@@ -5,15 +5,21 @@ const {
 } = require("@discordjs/voice");
 
 const { spawn } = require("child_process");
+const path = require("path");
 const ffmpeg = require("ffmpeg-static");
 const YTDlpWrap = require("yt-dlp-wrap").default;
 
 const queues = require("./queue");
 
 
-// usa o yt-dlp baixado pelo install-yt-dlp.js
-const ytDlp = new YTDlpWrap(
+// caminho do yt-dlp baixado no Railway
+const ytDlpPath = path.join(
+    process.cwd(),
     "yt-dlp"
+);
+
+const ytDlp = new YTDlpWrap(
+    ytDlpPath
 );
 
 
@@ -54,8 +60,7 @@ async function playSong(guild, song) {
             song.url,
             "-f",
             "bestaudio",
-            "--no-playlist",
-            "--extract-audio"
+            "--no-playlist"
         ]);
 
 
@@ -151,6 +156,7 @@ async function playSong(guild, song) {
                 queue.playing = false;
 
 
+
                 if (queue.ffmpegProcess) {
 
                     queue.ffmpegProcess.kill();
@@ -158,6 +164,7 @@ async function playSong(guild, song) {
                     queue.ffmpegProcess = null;
 
                 }
+
 
 
                 queue.current = null;
