@@ -13,7 +13,6 @@ const YTDlpWrap = require("yt-dlp-wrap").default;
 const queues = require("./queue");
 
 
-// caminho do yt-dlp
 const ytDlpPath = path.join(
     process.cwd(),
     "yt-dlp"
@@ -23,32 +22,21 @@ const ytDlpPath = path.join(
 if (fs.existsSync(ytDlpPath)) {
 
     try {
-
         fs.chmodSync(
             ytDlpPath,
             0o755
         );
 
+        console.log("✅ yt-dlp permissão OK");
+
+    } catch(e) {
         console.log(
-            "✅ Permissão yt-dlp OK"
+            "❌ Erro permissão:",
+            e.message
         );
-
-    } catch(err){
-
-        console.log(
-            "❌ Erro permissão yt-dlp:",
-            err.message
-        );
-
     }
 
 }
-
-
-console.log(
-    "🎵 yt-dlp:",
-    ytDlpPath
-);
 
 
 const ytDlp = new YTDlpWrap(
@@ -59,25 +47,17 @@ const ytDlp = new YTDlpWrap(
 
 function durationToSeconds(duration){
 
-    if(!duration)
-        return 0;
+    if(!duration) return 0;
 
-
-    const p = duration
-    .split(":")
-    .map(Number);
-
+    const p = duration.split(":").map(Number);
 
     if(p.length === 2)
         return p[0] * 60 + p[1];
 
-
     if(p.length === 3)
         return p[0] * 3600 + p[1] * 60 + p[2];
 
-
     return 0;
-
 }
 
 
@@ -85,16 +65,13 @@ function durationToSeconds(duration){
 
 async function playSong(guild, song){
 
-
-    const queue =
-    queues.getQueue(
+    const queue = queues.getQueue(
         guild.id
     );
 
 
     if(!queue || !song)
         return;
-
 
 
     queue.playing = true;
@@ -105,19 +82,24 @@ async function playSong(guild, song){
     );
 
 
-
     try {
 
 
-        const stream =
-        ytDlp.execStream([
+        const stream = ytDlp.execStream([
 
             song.url,
 
             "-f",
-            "bestaudio",
+            "bestaudio/best",
 
-            "--no-playlist"
+            "--no-playlist",
+
+            "--quiet",
+
+            "--no-warnings",
+
+            "-o",
+            "-"
 
         ]);
 
@@ -126,20 +108,16 @@ async function playSong(guild, song){
         stream.on(
             "error",
             err=>{
-
                 console.log(
                     "❌ Erro yt-dlp:",
-                    err
+                    err.message
                 );
-
             }
         );
 
 
 
-
-        const ffmpegProcess =
-        spawn(
+        const ffmpegProcess = spawn(
             ffmpeg,
             [
 
@@ -190,20 +168,14 @@ async function playSong(guild, song){
 
 
 
-
         const resource =
         createAudioResource(
             ffmpegProcess.stdout,
             {
-
-                inputType:
-                StreamType.Raw,
-
+                inputType: StreamType.Raw,
                 inlineVolume:true
-
             }
         );
-
 
 
 
@@ -217,13 +189,8 @@ async function playSong(guild, song){
 
 
 
-
-        queue.resource =
-        resource;
-
-
-        queue.current =
-        song;
+        queue.resource = resource;
+        queue.current = song;
 
 
         queue.duration =
@@ -239,7 +206,6 @@ async function playSong(guild, song){
 
 
 
-
         queue.player.once(
             AudioPlayerStatus.Playing,
             ()=>{
@@ -247,14 +213,12 @@ async function playSong(guild, song){
                 queue.startedAt =
                 Date.now();
 
-
                 console.log(
                     "▶️ Música começou!"
                 );
 
             }
         );
-
 
 
 
@@ -284,9 +248,7 @@ async function playSong(guild, song){
 
 
                 queue.current = null;
-
                 queue.startedAt = null;
-
                 queue.duration = 0;
 
 
@@ -299,8 +261,7 @@ async function playSong(guild, song){
 
 
 
-
-                if(queue.songs.length > 0){
+                if(queue.songs.length){
 
                     playSong(
                         guild,
@@ -316,31 +277,11 @@ async function playSong(guild, song){
 
 
 
-
-        ffmpegProcess.on(
-            "error",
-            err=>{
-
-                console.log(
-                    "❌ Erro FFmpeg:",
-                    err
-                );
-
-
-                queue.playing = false;
-
-            }
-        );
-
-
-
-
     } catch(error){
 
-
         console.log(
-            "❌ Erro player completo:",
-            error
+            "❌ Erro player:",
+            error.message
         );
 
 
@@ -352,12 +293,7 @@ async function playSong(guild, song){
 
 
 
-
-
 module.exports = {
-
     playSong,
-
     durationToSeconds
-
 };
