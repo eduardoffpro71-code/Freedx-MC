@@ -11,15 +11,52 @@ const url =
 "https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp_linux";
 
 
+// verifica se já existe
+if (fs.existsSync(file)) {
+
+    try {
+
+        fs.chmodSync(
+            file,
+            0o755
+        );
+
+        console.log(
+            "✅ yt-dlp já existe!"
+        );
+
+        console.log(
+            "🚀 Continuando inicialização do bot..."
+        );
+
+        process.exit(0);
+
+    } catch(err) {
+
+        console.log(
+            "⚠️ Erro verificando yt-dlp:",
+            err.message
+        );
+
+    }
+
+}
+
+
+
 function baixar(urlAtual, primeira = true){
 
     return new Promise((resolve, reject)=>{
 
+
         if(primeira){
+
             console.log(
                 "⬇️ Baixando yt-dlp..."
             );
+
         }
+
 
 
         https.get(urlAtual, res=>{
@@ -41,6 +78,7 @@ function baixar(urlAtual, primeira = true){
             }
 
 
+
             if(res.statusCode !== 200){
 
                 return reject(
@@ -57,6 +95,7 @@ function baixar(urlAtual, primeira = true){
             fs.createWriteStream(file);
 
 
+
             res.pipe(out);
 
 
@@ -67,7 +106,9 @@ function baixar(urlAtual, primeira = true){
 
                     out.close(()=>{
 
+
                         try{
+
 
                             fs.chmodSync(
                                 file,
@@ -89,7 +130,9 @@ function baixar(urlAtual, primeira = true){
 
                         }
 
+
                     });
+
 
                 }
             );
@@ -100,6 +143,7 @@ function baixar(urlAtual, primeira = true){
             "error",
             reject
         );
+
 
     });
 
@@ -117,11 +161,14 @@ baixar(url)
 })
 .catch(err=>{
 
+
     console.error(
         "❌ Erro ao instalar yt-dlp:",
         err.message
     );
 
+
     process.exit(1);
+
 
 });
