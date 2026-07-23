@@ -11,6 +11,7 @@ const fs = require("fs");
 const path = require("path");
 
 
+
 const configPath = path.join(
     __dirname,
     "../config.json"
@@ -20,11 +21,24 @@ const configPath = path.join(
 
 let config = {};
 
-try {
 
-    config = require("../config.json");
 
-} catch {
+// tenta carregar config local
+if(fs.existsSync(configPath)){
+
+    try{
+
+        config = require(configPath);
+
+    }catch{
+
+        console.log(
+            "⚠️ Erro lendo config.json"
+        );
+
+    }
+
+}else{
 
     console.log(
         "⚠️ config.json não encontrado, usando Railway Variables"
@@ -35,13 +49,16 @@ try {
 
 
 
+
+
+
+
 async function createPanel(client){
 
 
     console.log(
         "🎵 Verificando painel automático..."
     );
-
 
 
     try{
@@ -65,18 +82,25 @@ async function createPanel(client){
 
 
 
+
+
         let panelChannel =
-        process.env.PANEL_CHANNEL || config.panelChannel;
+        process.env.PANEL_CHANNEL ||
+        config.panelChannel;
 
 
 
         let panelMessage =
-        process.env.PANEL_MESSAGE || config.panelMessage;
+        process.env.PANEL_MESSAGE ||
+        config.panelMessage;
+
 
 
 
 
         let canal;
+
+
 
 
 
@@ -88,7 +112,10 @@ async function createPanel(client){
                 panelChannel
             );
 
+
         }
+
+
 
 
 
@@ -117,11 +144,10 @@ async function createPanel(client){
             canal.id;
 
 
-            config.panelChannel =
-            canal.id;
-
-
         }
+
+
+
 
 
 
@@ -147,14 +173,19 @@ async function createPanel(client){
                 return;
 
 
+
             }catch{
 
 
                 panelMessage = null;
 
+
             }
 
+
         }
+
+
 
 
 
@@ -193,15 +224,19 @@ Use os botões abaixo para controlar o player.
 
 
 
+
+
         const row1 =
         new ActionRowBuilder()
 
         .addComponents(
 
+
             new ButtonBuilder()
             .setCustomId("music_play")
             .setEmoji("▶️")
             .setStyle(ButtonStyle.Success),
+
 
 
             new ButtonBuilder()
@@ -210,10 +245,12 @@ Use os botões abaixo para controlar o player.
             .setStyle(ButtonStyle.Secondary),
 
 
+
             new ButtonBuilder()
             .setCustomId("music_next")
             .setEmoji("⏭️")
             .setStyle(ButtonStyle.Primary),
+
 
 
             new ButtonBuilder()
@@ -221,7 +258,11 @@ Use os botões abaixo para controlar o player.
             .setEmoji("⏹️")
             .setStyle(ButtonStyle.Danger)
 
+
         );
+
+
+
 
 
 
@@ -234,10 +275,12 @@ Use os botões abaixo para controlar o player.
 
         .addComponents(
 
+
             new ButtonBuilder()
             .setCustomId("volume_down")
             .setEmoji("🔉")
             .setStyle(ButtonStyle.Secondary),
+
 
 
             new ButtonBuilder()
@@ -246,10 +289,12 @@ Use os botões abaixo para controlar o player.
             .setStyle(ButtonStyle.Secondary),
 
 
+
             new ButtonBuilder()
             .setCustomId("music_loop")
             .setEmoji("🔁")
             .setStyle(ButtonStyle.Success),
+
 
 
             new ButtonBuilder()
@@ -257,7 +302,11 @@ Use os botões abaixo para controlar o player.
             .setLabel("🔎 Pesquisar")
             .setStyle(ButtonStyle.Primary)
 
+
         );
+
+
+
 
 
 
@@ -284,17 +333,41 @@ Use os botões abaixo para controlar o player.
 
 
 
-        config.panelChannel =
-        canal.id;
 
 
-        config.panelMessage =
-        painel.id;
+        console.log(
+            "✅ Painel criado!"
+        );
 
 
 
-        // Só salva se existir config.json local
+        console.log(
+            "📌 Canal:",
+            canal.id
+        );
+
+
+        console.log(
+            "📌 Mensagem:",
+            painel.id
+        );
+
+
+
+
+
+
+        // salva somente se existir config local
         if(fs.existsSync(configPath)){
+
+
+            config.panelChannel =
+            canal.id;
+
+
+            config.panelMessage =
+            painel.id;
+
 
 
             fs.writeFileSync(
@@ -309,16 +382,10 @@ Use os botões abaixo para controlar o player.
 
             );
 
+
         }
 
 
-
-
-
-
-        console.log(
-            "✅ Painel criado e salvo!"
-        );
 
 
 
@@ -335,6 +402,7 @@ Use os botões abaixo para controlar o player.
 
 
 }
+
 
 
 

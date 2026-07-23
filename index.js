@@ -16,23 +16,42 @@ const fs = require("fs");
 
 
 
+
 // ==========================
 // CONFIG
 // ==========================
 
 let config = {};
 
-try {
 
-    config = require("./config.json");
+if(fs.existsSync("./config.json")){
 
-} catch {
+
+    try {
+
+        config = require("./config.json");
+
+    } catch {
+
+        console.log(
+            "⚠️ Erro lendo config.json"
+        );
+
+    }
+
+
+}else{
+
 
     console.log(
-        "⚠️ config.json não encontrado, usando Railway TOKEN"
+        "⚠️ config.json não encontrado, usando Railway Variables"
     );
 
+
 }
+
+
+
 
 
 
@@ -45,11 +64,13 @@ let settings = {
 };
 
 
-if (fs.existsSync("./settings.json")) {
+if(fs.existsSync("./settings.json")){
 
     settings = require("./settings.json");
 
 }
+
+
 
 
 
@@ -60,7 +81,7 @@ if (fs.existsSync("./settings.json")) {
 
 const client = new Client({
 
-    intents: [
+    intents:[
 
         GatewayIntentBits.Guilds,
 
@@ -82,30 +103,45 @@ client.commands = new Collection();
 
 
 
+
 // ==========================
 // COMANDOS
 // ==========================
+
+if(fs.existsSync("./commands")){
+
 
 const commandFiles = fs
 .readdirSync("./commands")
 .filter(file => file.endsWith(".js"));
 
 
-for (const file of commandFiles) {
+
+for(const file of commandFiles){
 
 
-    const command = require(
-        `./commands/${file}`
-    );
+    const command =
+    require(`./commands/${file}`);
 
 
-    client.commands.set(
-        command.name,
-        command
-    );
+
+    if(command.name){
+
+        client.commands.set(
+            command.name,
+            command
+        );
+
+    }
 
 
 }
+
+
+}
+
+
+
 
 
 
@@ -114,22 +150,25 @@ for (const file of commandFiles) {
 // EVENTOS
 // ==========================
 
+
+if(fs.existsSync("./events")){
+
+
 const eventFiles = fs
 .readdirSync("./events")
 .filter(file => file.endsWith(".js"));
 
 
 
-for (const file of eventFiles) {
+for(const file of eventFiles){
 
 
-    const event = require(
-        `./events/${file}`
-    );
+    const event =
+    require(`./events/${file}`);
 
 
 
-    if(event.once) {
+    if(event.once){
 
 
         client.once(
@@ -138,7 +177,7 @@ for (const file of eventFiles) {
         );
 
 
-    } else {
+    }else{
 
 
         client.on(
@@ -149,7 +188,12 @@ for (const file of eventFiles) {
 
     }
 
+
 }
+
+
+}
+
 
 
 
@@ -162,7 +206,7 @@ for (const file of eventFiles) {
 
 client.on(
 "messageCreate",
-async message => {
+async message=>{
 
 
     if(message.author.bot)
@@ -201,7 +245,7 @@ async message => {
 
 
 
-    try {
+    try{
 
 
         await command.execute(
@@ -210,7 +254,7 @@ async message => {
         );
 
 
-    } catch(error) {
+    }catch(error){
 
 
         console.error(
@@ -236,7 +280,7 @@ async message => {
 
 process.on(
 "unhandledRejection",
-error => {
+error=>{
 
     console.error(
         "❌ Unhandled:",
@@ -246,9 +290,10 @@ error => {
 });
 
 
+
 process.on(
 "uncaughtException",
-error => {
+error=>{
 
     console.error(
         "❌ Exception:",
@@ -267,16 +312,19 @@ error => {
 // LOGIN
 // ==========================
 
+
 const TOKEN =
 process.env.TOKEN || config.token;
 
 
 
-if(!TOKEN) {
+if(!TOKEN){
+
 
     console.log(
         "❌ TOKEN não encontrado!"
     );
+
 
     process.exit(1);
 
@@ -284,13 +332,17 @@ if(!TOKEN) {
 
 
 
+
+
 client.login(TOKEN)
 
 .then(()=>{
 
+
     console.log(
         "🚀 Login realizado!"
     );
+
 
 })
 
