@@ -79,16 +79,16 @@ async function playSong(guild, song) {
             "--force-ipv4",
 
             "--retries",
-            "10",
+            "20",
 
             "--fragment-retries",
-            "10",
+            "20",
 
             "--socket-timeout",
             "60",
 
             "--extractor-args",
-            "youtube:player_client=android",
+            "youtube:player_client=web_safari",
 
             "-o",
             "-"
@@ -103,10 +103,11 @@ async function playSong(guild, song) {
                 "🍪 Usando cookies"
             );
 
-            args.push(
+            args.unshift(
                 "--cookies",
                 cookies
             );
+
         }
 
 
@@ -268,6 +269,7 @@ async function playSong(guild, song) {
                     } catch {}
 
                     queue.ffmpegProcess = null;
+
                 }
 
 
