@@ -120,7 +120,7 @@ const args = [
     song.url,
 
     "-f",
-    "bestaudio/best",
+    "bestaudio*",
 
     "--buffer-size",
     "16K",
@@ -142,7 +142,7 @@ const args = [
     "--geo-bypass",
 
     "--extractor-args",
-    "youtube:player_client=android,web",
+    "youtube:player_client=android",
 
     "--user-agent",
     "Mozilla/5.0",
