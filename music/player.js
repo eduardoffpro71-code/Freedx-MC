@@ -9,9 +9,24 @@ const { spawn } = require("child_process");
 const ffmpegPath = require("ffmpeg-static");
 
 const YTDlpWrap = require("yt-dlp-wrap").default;
-const ytDlp = new YTDlpWrap();
+
+const path = require("path");
 
 const queues = require("./queue");
+
+
+// caminho do yt-dlp instalado pelo npm
+const ytDlpPath = path.join(
+    __dirname,
+    "..",
+    "node_modules",
+    "yt-dlp-wrap",
+    "bin",
+    "yt-dlp"
+);
+
+
+const ytDlp = new YTDlpWrap(ytDlpPath);
 
 
 
@@ -50,8 +65,10 @@ async function playSong(guild, song){
     queues.getQueue(guild.id);
 
 
+
     if(!queue)
         return;
+
 
 
     if(queue.playing)
@@ -60,6 +77,7 @@ async function playSong(guild, song){
 
 
     queue.guildId = guild.id;
+
     queue.playing = true;
 
 
@@ -76,14 +94,16 @@ async function playSong(guild, song){
         const yt =
         ytDlp.execStream([
 
+
             song.url,
 
+
             "-f",
-            "bestaudio/best",
+            "bestaudio",
 
-            "--no-playlist",
 
-            "--quiet"
+            "--no-playlist"
+
 
         ]);
 
@@ -109,9 +129,6 @@ async function playSong(guild, song){
                 "-ac",
                 "2",
 
-                "-loglevel",
-                "error",
-
                 "pipe:1"
 
             ]
@@ -120,8 +137,8 @@ async function playSong(guild, song){
 
 
 
-
         queue.ytProcess = yt;
+
         queue.ffmpegProcess = ffmpeg;
 
 
@@ -130,7 +147,6 @@ async function playSong(guild, song){
         yt.pipe(
             ffmpeg.stdin
         );
-
 
 
 
@@ -150,7 +166,6 @@ async function playSong(guild, song){
 
 
 
-
         if(resource.volume){
 
             resource.volume.setVolume(
@@ -161,30 +176,9 @@ async function playSong(guild, song){
 
 
 
+        queue.resource = resource;
 
         queue.current = song;
-
-        queue.duration =
-        durationToSeconds(
-            song.duration
-        );
-
-
-
-
-
-        if(!queue.player){
-
-            console.log(
-                "❌ Player não existe"
-            );
-
-            queue.playing=false;
-            return;
-
-        }
-
-
 
 
         queue.player.play(
@@ -194,10 +188,10 @@ async function playSong(guild, song){
 
 
 
-
         queue.player.once(
             AudioPlayerStatus.Playing,
             ()=>{
+
 
                 queue.startedAt =
                 Date.now();
@@ -206,6 +200,7 @@ async function playSong(guild, song){
                 console.log(
                     "▶️ Música começou!"
                 );
+
 
             }
         );
@@ -232,15 +227,11 @@ async function playSong(guild, song){
 
                 queue.current=null;
 
-                queue.startedAt=null;
-
-                queue.duration=0;
 
 
+                if(queue.songs.length){
 
-                if(queue.songs.length > 0){
-
-                    await playSong(
+                    playSong(
                         guild,
                         queue.songs[0]
                     );
@@ -260,15 +251,19 @@ async function playSong(guild, song){
             "error",
             err=>{
 
+
                 console.log(
-                    "❌ YTDLP:",
+                    "❌ yt-dlp:",
                     err.message
                 );
 
+
                 queue.playing=false;
+
 
             }
         );
+
 
 
 
@@ -277,12 +272,15 @@ async function playSong(guild, song){
             "error",
             err=>{
 
+
                 console.log(
-                    "❌ FFMPEG:",
+                    "❌ ffmpeg:",
                     err.message
                 );
 
+
                 queue.playing=false;
+
 
             }
         );
@@ -299,6 +297,7 @@ async function playSong(guild, song){
 
 
         queue.playing=false;
+
 
     }
 
