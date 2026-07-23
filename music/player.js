@@ -120,11 +120,13 @@ async function playSong(guild, song) {
             song.url,
 
             "-f",
-            "ba[ext=webm]/ba[ext=m4a]/ba",
+            "bestaudio*",
 
             "--no-playlist",
 
             "--no-warnings",
+
+            "--ignore-errors",
 
             "--force-ipv4",
 
@@ -137,17 +139,14 @@ async function playSong(guild, song) {
             "--socket-timeout",
             "60",
 
-            "--http-chunk-size",
-            "10M",
-
-            "--buffer-size",
-            "1024K",
-
             "--extractor-args",
-            "youtube:player_client=android,web",
+            "youtube:player_client=android",
 
             "--user-agent",
             "Mozilla/5.0",
+
+            "--http-chunk-size",
+            "10M",
 
             "-o",
             "-"
@@ -227,7 +226,8 @@ async function playSong(guild, song) {
                 queue.playing = false;
 
 
-                ffmpegProcess.kill();
+                if(ffmpegProcess)
+                    ffmpegProcess.kill();
 
             }
         );
@@ -243,8 +243,8 @@ async function playSong(guild, song) {
 
 
                 if(
-                    !msg.includes("Connection reset") &&
-                    !msg.includes("partial file")
+                    !msg.includes("partial file") &&
+                    !msg.includes("Connection reset")
                 ){
 
                     console.log(
