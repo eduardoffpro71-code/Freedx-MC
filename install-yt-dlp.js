@@ -1,15 +1,15 @@
-const YTDlpWrap = require("yt-dlp-wrap").default;
-
+const { default: YTDlpWrap } = require("yt-dlp-wrap");
 const path = require("path");
 
-const ytDlp = new YTDlpWrap();
+(async () => {
+    try {
+        const output = path.join(__dirname, "yt-dlp");
 
-ytDlp.downloadFromGithub(
-    path.join(__dirname, "yt-dlp")
-)
-.then(() => {
-    console.log("✅ yt-dlp instalado!");
-})
-.catch(err => {
-    console.log("❌ Erro yt-dlp:", err);
-});
+        await YTDlpWrap.downloadBinary(output);
+
+        console.log("✅ yt-dlp instalado!");
+    } catch (err) {
+        console.error("❌ Erro ao instalar yt-dlp:", err);
+        process.exit(1);
+    }
+})();
