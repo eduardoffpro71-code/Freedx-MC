@@ -28,7 +28,9 @@ if (fs.existsSync(ytDlpPath)) {
             0o755
         );
 
-        console.log("✅ yt-dlp permissão OK");
+        console.log(
+            "✅ yt-dlp permissão OK"
+        );
 
     } catch (e) {
 
@@ -99,6 +101,7 @@ async function playSong(guild, song) {
 
     try {
 
+
         const cookies = path.join(
             process.cwd(),
             "cookies.txt"
@@ -111,12 +114,22 @@ async function playSong(guild, song) {
         );
 
 
+
         const args = [
 
             song.url,
 
+
             "-f",
-            "bestaudio[ext=m4a]/bestaudio/best",
+            "bestaudio/best",
+
+
+            "--downloader",
+            "ffmpeg",
+
+
+            "--hls-use-mpegts",
+
 
             "--no-playlist",
 
@@ -128,18 +141,23 @@ async function playSong(guild, song) {
 
             "--geo-bypass",
 
+
             "--extractor-args",
-            "youtube:player_client=android,web",
+            "youtube:player_client=android",
+
 
             "--user-agent",
             "Mozilla/5.0",
 
+
             "--no-part",
+
 
             "-o",
             "-"
 
         ];
+
 
 
         if (fs.existsSync(cookies)) {
@@ -153,9 +171,10 @@ async function playSong(guild, song) {
 
 
 
-        const stream = ytDlp.execStream(
-            args
-        );
+        const stream =
+            ytDlp.execStream(
+                args
+            );
 
 
 
@@ -175,31 +194,32 @@ async function playSong(guild, song) {
 
 
 
-        const ffmpegProcess = spawn(
-            ffmpeg,
-            [
+        const ffmpegProcess =
+            spawn(
+                ffmpeg,
+                [
 
-                "-i",
-                "pipe:0",
+                    "-i",
+                    "pipe:0",
 
-                "-f",
-                "s16le",
+                    "-f",
+                    "s16le",
 
-                "-ar",
-                "48000",
+                    "-ar",
+                    "48000",
 
-                "-ac",
-                "2",
+                    "-ac",
+                    "2",
 
-                "-vn",
+                    "-vn",
 
-                "-loglevel",
-                "error",
+                    "-loglevel",
+                    "error",
 
-                "pipe:1"
+                    "pipe:1"
 
-            ]
-        );
+                ]
+            );
 
 
 
@@ -254,6 +274,7 @@ async function playSong(guild, song) {
         queue.current = song;
 
 
+
         queue.duration =
             durationToSeconds(
                 song.duration
@@ -288,6 +309,7 @@ async function playSong(guild, song) {
             AudioPlayerStatus.Idle,
             () => {
 
+
                 console.log(
                     "⏹️ Música terminou"
                 );
@@ -297,7 +319,7 @@ async function playSong(guild, song) {
 
 
 
-                if (queue.ffmpegProcess) {
+                if(queue.ffmpegProcess){
 
                     queue.ffmpegProcess.kill();
 
@@ -307,7 +329,7 @@ async function playSong(guild, song) {
 
 
 
-                if (!queue.loop) {
+                if(!queue.loop){
 
                     queue.songs.shift();
 
@@ -319,7 +341,7 @@ async function playSong(guild, song) {
 
 
 
-                if (queue.songs.length) {
+                if(queue.songs.length){
 
                     playSong(
                         guild,
@@ -332,7 +354,8 @@ async function playSong(guild, song) {
         );
 
 
-    } catch (error) {
+    } catch(error) {
+
 
         console.log(
             "❌ Erro player:",
