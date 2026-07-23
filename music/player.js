@@ -71,13 +71,14 @@ async function playSong(guild, song) {
         );
 
 
-
         const args = [
 
             song.url,
 
+
             "-f",
-            "ba/b",
+            "bestaudio/best",
+
 
             "--no-playlist",
 
@@ -87,18 +88,21 @@ async function playSong(guild, song) {
 
             "--force-ipv4",
 
+
             "--retries",
-            "20",
+            "10",
+
 
             "--fragment-retries",
-            "20",
+            "10",
+
 
             "--socket-timeout",
             "60",
 
 
             "--extractor-args",
-            "youtube:player_client=android,web",
+            "youtube:player_client=android,web,ios",
 
 
             "--js-runtimes",
@@ -110,7 +114,7 @@ async function playSong(guild, song) {
 
 
             "--format-sort",
-            "ext:m4a,res:1440",
+            "proto:https",
 
 
             "-o",
@@ -130,6 +134,13 @@ async function playSong(guild, song) {
             args.push(
                 "--cookies",
                 cookies
+            );
+
+        }
+        else{
+
+            console.log(
+                "⚠️ cookies.txt não encontrado"
             );
 
         }
