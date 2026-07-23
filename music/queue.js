@@ -2,10 +2,15 @@ const queues = new Map();
 
 
 
+
 function createQueue(guildId, data = {}) {
 
 
     const queue = {
+
+
+        // ID do servidor
+        guildId: guildId,
 
 
         // músicas
@@ -21,9 +26,11 @@ function createQueue(guildId, data = {}) {
         textChannel: null,
 
 
+
         // conexão e player
         connection: null,
         player: null,
+
 
 
         // configurações
@@ -31,8 +38,10 @@ function createQueue(guildId, data = {}) {
         loop: false,
 
 
+
         // painel
         panelMessage: null,
+
 
 
         // tempo da música
@@ -40,18 +49,22 @@ function createQueue(guildId, data = {}) {
         duration: 0,
 
 
+
         // controles
         paused: false,
         playing: false,
 
 
-        // recurso de áudio atual
+
+        // recurso áudio
         resource: null,
 
 
-        // processos yt-dlp / ffmpeg
+
+        // processos
         ytProcess: null,
         ffmpegProcess: null,
+
 
 
         ...data
@@ -60,10 +73,13 @@ function createQueue(guildId, data = {}) {
 
 
 
+
+
     queues.set(
         guildId,
         queue
     );
+
 
 
     return queue;
@@ -74,13 +90,19 @@ function createQueue(guildId, data = {}) {
 
 
 
+
+
 function getQueue(guildId){
+
 
     return queues.get(
         guildId
     );
 
+
 }
+
+
 
 
 
@@ -88,11 +110,15 @@ function getQueue(guildId){
 
 function get(guildId){
 
+
     return queues.get(
         guildId
     );
 
+
 }
+
+
 
 
 
@@ -101,8 +127,12 @@ function get(guildId){
 function deleteQueue(guildId){
 
 
+
     const queue =
-    queues.get(guildId);
+    queues.get(
+        guildId
+    );
+
 
 
     if(queue){
@@ -110,13 +140,20 @@ function deleteQueue(guildId){
 
         try{
 
-            if(queue.connection)
+
+            if(queue.connection){
+
                 queue.connection.destroy();
+
+            }
 
 
         }catch{}
 
+
+
     }
+
 
 
 
@@ -124,7 +161,10 @@ function deleteQueue(guildId){
         guildId
     );
 
+
 }
+
+
 
 
 
@@ -132,11 +172,15 @@ function deleteQueue(guildId){
 
 function hasQueue(guildId){
 
+
     return queues.has(
         guildId
     );
 
+
 }
+
+
 
 
 

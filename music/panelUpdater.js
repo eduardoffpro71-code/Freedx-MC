@@ -3,44 +3,71 @@ const {
 } = require("discord.js");
 
 
-const queues = require("./queue");
-
-const fs = require("fs");
-const path = require("path");
+const queues =
+require("./queue");
 
 
+const fs =
+require("fs");
 
-let config = {};
 
-const configPath = path.join(
+const path =
+require("path");
+
+
+
+
+
+const panelsPath =
+path.join(
     __dirname,
-    "../config.json"
+    "../data/panels.json"
 );
 
 
 
-// carrega config somente se existir
-if(fs.existsSync(configPath)){
+
+
+
+
+
+function loadPanels(){
+
 
     try{
 
-        config = require(configPath);
+
+        if(!fs.existsSync(panelsPath)){
+
+            return {};
+
+        }
+
+
+
+        return JSON.parse(
+            fs.readFileSync(
+                panelsPath,
+                "utf8"
+            )
+        );
+
+
 
     }catch{
 
-        console.log(
-            "⚠️ Erro lendo config local"
-        );
+
+        return {};
 
     }
 
-}else{
-
-    console.log(
-        "⚠️ config.json não encontrado, usando Railway Variables"
-    );
 
 }
+
+
+
+
+
 
 
 
@@ -51,7 +78,11 @@ let updaterStarted = false;
 
 
 
+
+
+
 function formatTime(seconds){
+
 
     if(!seconds || seconds < 0){
 
@@ -60,19 +91,25 @@ function formatTime(seconds){
     }
 
 
+
     const minutes =
     Math.floor(seconds / 60);
+
 
 
     const secs =
     seconds % 60;
 
 
+
     return `${minutes}:${secs
         .toString()
         .padStart(2,"0")}`;
 
+
 }
+
+
 
 
 
@@ -85,6 +122,7 @@ function progressBar(current,total){
 
 
     const size = 20;
+
 
 
     if(!total || total <= 0){
@@ -120,6 +158,7 @@ function progressBar(current,total){
         )
     );
 
+
 }
 
 
@@ -131,6 +170,7 @@ function progressBar(current,total){
 
 
 async function updatePanel(client, queue){
+
 
 
     if(
@@ -147,51 +187,72 @@ async function updatePanel(client, queue){
 
 
 
-    const panelChannel =
-    process.env.PANEL_CHANNEL ||
-    config.panelChannel;
-
-
-
-    const panelMessage =
-    process.env.PANEL_MESSAGE ||
-    config.panelMessage;
-
-
-
-
-
-    if(
-        !panelChannel ||
-        !panelMessage
-    ){
-
-        console.log(
-            "⚠️ IDs do painel não configurados"
-        );
-
-        return;
-
-    }
-
-
-
-
-
-
-
     try{
+
+
+
+        const panels =
+        loadPanels();
+
+
+
+
+
+        const guildId =
+        queue.guildId ||
+        queue.voiceChannel?.guild?.id;
+
+
+
+
+
+        if(!guildId){
+
+            return;
+
+        }
+
+
+
+
+
+
+        const panel =
+        panels[guildId];
+
+
+
+
+
+        if(!panel){
+
+            return;
+
+        }
+
+
+
+
+
+
 
 
         const canal =
         await client.channels.fetch(
-            panelChannel
-        );
+            panel.channel
+        ).catch(()=>null);
 
 
 
-        if(!canal)
+
+
+        if(!canal){
+
             return;
+
+        }
+
+
 
 
 
@@ -199,8 +260,20 @@ async function updatePanel(client, queue){
 
         const mensagem =
         await canal.messages.fetch(
-            panelMessage
-        );
+            panel.message
+        ).catch(()=>null);
+
+
+
+
+
+        if(!mensagem){
+
+            return;
+
+        }
+
+
 
 
 
@@ -214,8 +287,11 @@ async function updatePanel(client, queue){
 
 
 
+
+
         const total =
         queue.duration || 0;
+
 
 
 
@@ -227,33 +303,46 @@ async function updatePanel(client, queue){
         const embed =
         new EmbedBuilder()
 
-        .setColor("#00FFFF")
+
+
+        .setColor(
+            "#00FFFF"
+        )
+
+
 
         .setTitle(
             "🎵 Freedx MC • Tocando Agora"
         )
+
+
 
         .setDescription(
 `
 🎶 **${queue.current.title}**
 
 ${progressBar(
-elapsed,
-total
+    elapsed,
+    total
 )}
 
 ⏱️ ${formatTime(elapsed)} / ${formatTime(total)}
 
+
 👤 Pedido por:
 **${queue.current.requestedBy || "Desconhecido"}**
 
+
 🔊 Volume:
 **${queue.volume || 100}%**
+
 
 🔁 Loop:
 **${queue.loop ? "Ativado" : "Desativado"}**
 `
         )
+
+
 
         .setFooter({
 
@@ -261,6 +350,8 @@ total
             "Freedx MC • Music System"
 
         })
+
+
 
         .setTimestamp();
 
@@ -270,13 +361,19 @@ total
 
 
 
+
+
         if(queue.current.thumbnail){
+
 
             embed.setThumbnail(
                 queue.current.thumbnail
             );
 
+
         }
+
+
 
 
 
@@ -294,6 +391,7 @@ total
 
 
 
+
     }catch(error){
 
 
@@ -304,6 +402,7 @@ total
 
 
     }
+
 
 
 }
@@ -319,8 +418,10 @@ total
 function startPanelUpdater(client){
 
 
+
     if(updaterStarted)
         return;
+
 
 
 
@@ -337,15 +438,19 @@ function startPanelUpdater(client){
 
 
 
+
     setInterval(async()=>{
+
 
 
         try{
 
 
+
             for(
                 const queue of queues.queues.values()
             ){
+
 
 
                 await updatePanel(
@@ -354,10 +459,14 @@ function startPanelUpdater(client){
                 );
 
 
+
             }
 
 
+
+
         }catch(error){
+
 
 
             console.log(
@@ -370,7 +479,9 @@ function startPanelUpdater(client){
 
 
 
+
     },5000);
+
 
 
 }
@@ -381,14 +492,20 @@ function startPanelUpdater(client){
 
 
 
+
 module.exports = {
+
 
     startPanelUpdater,
 
+
     updatePanel,
+
 
     formatTime,
 
+
     progressBar
+
 
 };

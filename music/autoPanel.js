@@ -12,39 +12,80 @@ const path = require("path");
 
 
 
-const configPath = path.join(
+const panelsPath =
+path.join(
     __dirname,
-    "../config.json"
+    "../data/panels.json"
 );
 
 
 
-let config = {};
 
 
+if(!fs.existsSync(path.dirname(panelsPath))){
 
-// tenta carregar config local
-if(fs.existsSync(configPath)){
-
-    try{
-
-        config = require(configPath);
-
-    }catch{
-
-        console.log(
-            "⚠️ Erro lendo config.json"
-        );
-
-    }
-
-}else{
-
-    console.log(
-        "⚠️ config.json não encontrado, usando Railway Variables"
+    fs.mkdirSync(
+        path.dirname(panelsPath),
+        {
+            recursive:true
+        }
     );
 
 }
+
+
+
+
+if(!fs.existsSync(panelsPath)){
+
+    fs.writeFileSync(
+        panelsPath,
+        "{}"
+    );
+
+}
+
+
+
+
+
+function loadPanels(){
+
+    try{
+
+        return JSON.parse(
+            fs.readFileSync(
+                panelsPath,
+                "utf8"
+            )
+        );
+
+    }catch{
+
+        return {};
+
+    }
+
+}
+
+
+
+
+
+
+function savePanels(data){
+
+    fs.writeFileSync(
+        panelsPath,
+        JSON.stringify(
+            data,
+            null,
+            4
+        )
+    );
+
+}
+
 
 
 
@@ -57,63 +98,39 @@ async function createPanel(client){
 
 
     console.log(
-        "🎵 Verificando painel automático..."
+        "🎵 Verificando painéis..."
     );
 
 
-    try{
 
-
-        const guild =
-        client.guilds.cache.first();
-
-
-
-        if(!guild){
-
-            console.log(
-                "❌ Nenhum servidor encontrado"
-            );
-
-            return;
-
-        }
+    const panels =
+    loadPanels();
 
 
 
 
 
-
-        let panelChannel =
-        process.env.PANEL_CHANNEL ||
-        config.panelChannel;
-
+    for(
+        const guild of client.guilds.cache.values()
+    ){
 
 
-        let panelMessage =
-        process.env.PANEL_MESSAGE ||
-        config.panelMessage;
+        try{
 
 
 
+            // já existe
+            if(panels[guild.id]){
 
 
-        let canal;
+                console.log(
+                    `✅ Painel já existe: ${guild.name}`
+                );
 
 
+                continue;
 
-
-
-        if(panelChannel){
-
-
-            canal =
-            guild.channels.cache.get(
-                panelChannel
-            );
-
-
-        }
+            }
 
 
 
@@ -121,102 +138,57 @@ async function createPanel(client){
 
 
 
-        if(!canal){
-
-
-            canal =
+            const canal =
             await guild.channels.create({
+
 
                 name:
                 "🎵・freedx-player",
 
+
                 type:
                 ChannelType.GuildText,
 
+
                 topic:
                 "Painel automático Freedx MC"
+
 
             });
 
 
 
-            panelChannel =
-            canal.id;
-
-
-        }
 
 
 
 
 
 
+            const embed =
+            new EmbedBuilder()
 
+            .setColor("#00FFFF")
 
+            .setTitle(
+                "🎧 Freedx MC • Music System"
+            )
 
-        if(panelMessage){
-
-
-            try{
-
-
-                await canal.messages.fetch(
-                    panelMessage
-                );
-
-
-                console.log(
-                    "✅ Painel já existe!"
-                );
-
-
-                return;
-
-
-
-            }catch{
-
-
-                panelMessage = null;
-
-
-            }
-
-
-        }
-
-
-
-
-
-
-
-
-        const embed =
-        new EmbedBuilder()
-
-        .setColor("#00FFFF")
-
-        .setTitle(
-            "🎧 Freedx MC • Music System"
-        )
-
-        .setDescription(
+            .setDescription(
 `
 🎶 **Nenhuma música tocando**
 
 Use os botões abaixo para controlar o player.
 `
-        )
+            )
 
-        .setFooter({
+            .setFooter({
 
-            text:
-            "Freedx MC 🎧"
+                text:
+                "Freedx MC 🎧"
 
-        })
+            })
 
-        .setTimestamp();
+            .setTimestamp();
 
 
 
@@ -226,40 +198,40 @@ Use os botões abaixo para controlar o player.
 
 
 
-        const row1 =
-        new ActionRowBuilder()
+            const row1 =
+            new ActionRowBuilder()
 
-        .addComponents(
+            .addComponents(
 
 
-            new ButtonBuilder()
-            .setCustomId("music_play")
-            .setEmoji("▶️")
-            .setStyle(ButtonStyle.Success),
+                new ButtonBuilder()
+                .setCustomId("music_play")
+                .setEmoji("▶️")
+                .setStyle(ButtonStyle.Success),
 
 
 
-            new ButtonBuilder()
-            .setCustomId("music_pause")
-            .setEmoji("⏸️")
-            .setStyle(ButtonStyle.Secondary),
+                new ButtonBuilder()
+                .setCustomId("music_pause")
+                .setEmoji("⏸️")
+                .setStyle(ButtonStyle.Secondary),
 
 
 
-            new ButtonBuilder()
-            .setCustomId("music_next")
-            .setEmoji("⏭️")
-            .setStyle(ButtonStyle.Primary),
+                new ButtonBuilder()
+                .setCustomId("music_next")
+                .setEmoji("⏭️")
+                .setStyle(ButtonStyle.Primary),
 
 
 
-            new ButtonBuilder()
-            .setCustomId("music_stop")
-            .setEmoji("⏹️")
-            .setStyle(ButtonStyle.Danger)
+                new ButtonBuilder()
+                .setCustomId("music_stop")
+                .setEmoji("⏹️")
+                .setStyle(ButtonStyle.Danger)
 
+            );
 
-        );
 
 
 
@@ -267,138 +239,120 @@ Use os botões abaixo para controlar o player.
 
 
 
+            const row2 =
+            new ActionRowBuilder()
 
+            .addComponents(
 
 
-        const row2 =
-        new ActionRowBuilder()
+                new ButtonBuilder()
+                .setCustomId("volume_down")
+                .setEmoji("🔉")
+                .setStyle(ButtonStyle.Secondary),
 
-        .addComponents(
 
 
-            new ButtonBuilder()
-            .setCustomId("volume_down")
-            .setEmoji("🔉")
-            .setStyle(ButtonStyle.Secondary),
+                new ButtonBuilder()
+                .setCustomId("volume_up")
+                .setEmoji("🔊")
+                .setStyle(ButtonStyle.Secondary),
 
 
 
-            new ButtonBuilder()
-            .setCustomId("volume_up")
-            .setEmoji("🔊")
-            .setStyle(ButtonStyle.Secondary),
+                new ButtonBuilder()
+                .setCustomId("music_loop")
+                .setEmoji("🔁")
+                .setStyle(ButtonStyle.Success),
 
 
 
-            new ButtonBuilder()
-            .setCustomId("music_loop")
-            .setEmoji("🔁")
-            .setStyle(ButtonStyle.Success),
+                new ButtonBuilder()
+                .setCustomId("music_search")
+                .setLabel("🔎 Pesquisar")
+                .setStyle(ButtonStyle.Primary)
 
 
+            );
 
-            new ButtonBuilder()
-            .setCustomId("music_search")
-            .setLabel("🔎 Pesquisar")
-            .setStyle(ButtonStyle.Primary)
 
 
-        );
 
 
 
 
 
 
+            const mensagem =
+            await canal.send({
 
+                embeds:[
+                    embed
+                ],
 
+                components:[
+                    row1,
+                    row2
+                ]
 
+            });
 
-        const painel =
-        await canal.send({
 
-            embeds:[
-                embed
-            ],
 
-            components:[
-                row1,
-                row2
-            ]
 
-        });
 
 
 
 
 
+            panels[guild.id] = {
 
 
+                channel:
+                canal.id,
 
-        console.log(
-            "✅ Painel criado!"
-        );
 
+                message:
+                mensagem.id
 
 
-        console.log(
-            "📌 Canal:",
-            canal.id
-        );
+            };
 
 
-        console.log(
-            "📌 Mensagem:",
-            painel.id
-        );
 
 
 
 
 
 
-        // salva somente se existir config local
-        if(fs.existsSync(configPath)){
+            savePanels(
+                panels
+            );
 
 
-            config.panelChannel =
-            canal.id;
 
 
-            config.panelMessage =
-            painel.id;
 
 
+            console.log(
+                `✅ Painel criado em ${guild.name}`
+            );
 
-            fs.writeFileSync(
 
-                configPath,
 
-                JSON.stringify(
-                    config,
-                    null,
-                    4
-                )
+        }catch(error){
 
+
+            console.log(
+                `❌ Erro painel ${guild.name}:`,
+                error.message
             );
 
 
         }
 
 
-
-
-
-    }catch(error){
-
-
-        console.log(
-            "❌ Erro criar painel:",
-            error.message
-        );
-
-
     }
+
 
 
 }
