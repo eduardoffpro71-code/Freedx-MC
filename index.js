@@ -1,4 +1,8 @@
-process.env.FFMPEG_PATH = require("ffmpeg-static");
+try {
+    process.env.FFMPEG_PATH = require("ffmpeg-static");
+} catch {
+    console.log("⚠️ ffmpeg-static não encontrado");
+}
 
 
 const {
@@ -9,6 +13,7 @@ const {
 
 
 const fs = require("fs");
+
 
 
 // ==========================
@@ -24,13 +29,16 @@ try {
 } catch {
 
     console.log(
-        "⚠️ config.json não encontrado, usando Railway Variables"
+        "⚠️ config.json não encontrado, usando Railway TOKEN"
     );
 
 }
 
 
 
+// ==========================
+// SETTINGS
+// ==========================
 
 let settings = {
     prefix: "!"
@@ -45,6 +53,10 @@ if (fs.existsSync("./settings.json")) {
 
 
 
+
+// ==========================
+// CLIENT
+// ==========================
 
 const client = new Client({
 
@@ -71,7 +83,7 @@ client.commands = new Collection();
 
 
 // ==========================
-// CARREGAR COMANDOS
+// COMANDOS
 // ==========================
 
 const commandFiles = fs
@@ -79,12 +91,12 @@ const commandFiles = fs
 .filter(file => file.endsWith(".js"));
 
 
-
 for (const file of commandFiles) {
 
 
-    const command =
-    require(`./commands/${file}`);
+    const command = require(
+        `./commands/${file}`
+    );
 
 
     client.commands.set(
@@ -98,9 +110,8 @@ for (const file of commandFiles) {
 
 
 
-
 // ==========================
-// CARREGAR EVENTOS
+// EVENTOS
 // ==========================
 
 const eventFiles = fs
@@ -112,12 +123,13 @@ const eventFiles = fs
 for (const file of eventFiles) {
 
 
-    const event =
-    require(`./events/${file}`);
+    const event = require(
+        `./events/${file}`
+    );
 
 
 
-    if(event.once){
+    if(event.once) {
 
 
         client.once(
@@ -126,7 +138,7 @@ for (const file of eventFiles) {
         );
 
 
-    }else{
+    } else {
 
 
         client.on(
@@ -137,7 +149,6 @@ for (const file of eventFiles) {
 
     }
 
-
 }
 
 
@@ -145,14 +156,13 @@ for (const file of eventFiles) {
 
 
 
-
 // ==========================
-// COMANDOS PREFIXO
+// PREFIX COMMANDS
 // ==========================
 
 client.on(
 "messageCreate",
-async message=>{
+async message => {
 
 
     if(message.author.bot)
@@ -191,7 +201,7 @@ async message=>{
 
 
 
-    try{
+    try {
 
 
         await command.execute(
@@ -200,11 +210,11 @@ async message=>{
         );
 
 
-    }catch(error){
+    } catch(error) {
 
 
         console.error(
-            "Erro comando:",
+            "❌ Erro comando:",
             error
         );
 
@@ -219,33 +229,34 @@ async message=>{
 
 
 
+
 // ==========================
 // PROTEÇÃO
 // ==========================
 
 process.on(
 "unhandledRejection",
-error=>{
+error => {
 
     console.error(
-        "Erro protegido:",
+        "❌ Unhandled:",
         error
     );
 
 });
-
 
 
 process.on(
 "uncaughtException",
-error=>{
+error => {
 
     console.error(
-        "Erro protegido:",
+        "❌ Exception:",
         error
     );
 
 });
+
 
 
 
@@ -256,11 +267,24 @@ error=>{
 // LOGIN
 // ==========================
 
+const TOKEN =
+process.env.TOKEN || config.token;
 
-client.login(
-    process.env.TOKEN || config.token
-)
 
+
+if(!TOKEN) {
+
+    console.log(
+        "❌ TOKEN não encontrado!"
+    );
+
+    process.exit(1);
+
+}
+
+
+
+client.login(TOKEN)
 
 .then(()=>{
 
@@ -269,7 +293,6 @@ client.login(
     );
 
 })
-
 
 .catch(error=>{
 
