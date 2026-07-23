@@ -12,21 +12,16 @@ const YTDlpWrap = require("yt-dlp-wrap").default;
 
 const queues = require("./queue");
 
-
 const ytDlpPath = path.join(
     process.cwd(),
-    "yt-dlp"
+    "yt-dlp.exe"
 );
-
 
 const ytDlp = new YTDlpWrap(
     ytDlpPath
 );
 
-
-
 function durationToSeconds(duration) {
-
     if (!duration)
         return 0;
 
@@ -42,13 +37,11 @@ function durationToSeconds(duration) {
 }
 
 
-
 async function playSong(guild, song) {
 
     const queue = queues.getQueue(
         guild.id
     );
-
 
     if (!queue || !song)
         return;
@@ -64,7 +57,6 @@ async function playSong(guild, song) {
 
     try {
 
-
         const cookies = path.join(
             process.cwd(),
             "cookies.txt"
@@ -75,10 +67,8 @@ async function playSong(guild, song) {
 
             song.url,
 
-
             "-f",
-            "bestaudio[ext=webm]/bestaudio",
-
+            "bestaudio/best",
 
             "--no-playlist",
 
@@ -86,47 +76,24 @@ async function playSong(guild, song) {
 
             "--ignore-errors",
 
-
             "--force-ipv4",
 
-
             "--retries",
-            "20",
-
+            "10",
 
             "--fragment-retries",
-            "20",
-
+            "10",
 
             "--socket-timeout",
             "60",
 
-
             "--extractor-args",
             "youtube:player_client=android,web",
-
-
-            "--js-runtimes",
-            "node",
-
-
-            "--remote-components",
-            "ejs:github",
-
-
-            "--downloader",
-            "native",
-
-
-            "--http-chunk-size",
-            "10M",
-
 
             "-o",
             "-"
 
         ];
-
 
 
         if(fs.existsSync(cookies)){
@@ -135,21 +102,17 @@ async function playSong(guild, song) {
                 "🍪 Usando cookies"
             );
 
-
             args.push(
                 "--cookies",
                 cookies
             );
-
         }
-
 
 
         const stream =
             ytDlp.execStream(
                 args
             );
-
 
 
         const ffmpegProcess =
@@ -180,16 +143,13 @@ async function playSong(guild, song) {
             );
 
 
-
         queue.ffmpegProcess =
             ffmpegProcess;
-
 
 
         stream.pipe(
             ffmpegProcess.stdin
         );
-
 
 
         stream.on(
@@ -201,41 +161,27 @@ async function playSong(guild, song) {
                     err.message
                 );
 
-
                 queue.playing = false;
 
-
                 try{
-
                     ffmpegProcess.kill();
-
                 }catch{}
 
             }
         );
 
 
+        ffmpegProcess.on(
+            "error",
+            err => {
 
-        ffmpegProcess.stderr.on(
-            "data",
-            data => {
-
-                const msg =
-                    data.toString();
-
-
-                if(msg.trim()){
-
-                    console.log(
-                        "FFMPEG:",
-                        msg
-                    );
-
-                }
+                console.log(
+                    "❌ ffmpeg:",
+                    err.message
+                );
 
             }
         );
-
 
 
         const resource =
@@ -248,7 +194,6 @@ async function playSong(guild, song) {
             );
 
 
-
         if(resource.volume){
 
             resource.volume.setVolume(
@@ -258,17 +203,23 @@ async function playSong(guild, song) {
         }
 
 
-
         queue.resource = resource;
 
         queue.current = song;
 
 
+        queue.player.removeAllListeners(
+            AudioPlayerStatus.Playing
+        );
+
+        queue.player.removeAllListeners(
+            AudioPlayerStatus.Idle
+        );
+
 
         queue.player.play(
             resource
         );
-
 
 
         queue.player.once(
@@ -278,7 +229,6 @@ async function playSong(guild, song) {
                 queue.startedAt =
                     Date.now();
 
-
                 console.log(
                     "▶️ Música começou!"
                 );
@@ -287,11 +237,9 @@ async function playSong(guild, song) {
         );
 
 
-
         queue.player.once(
             AudioPlayerStatus.Idle,
             ()=>{
-
 
                 console.log(
                     "⏹️ Música terminou"
@@ -301,19 +249,14 @@ async function playSong(guild, song) {
                 queue.playing = false;
 
 
-
                 if(queue.ffmpegProcess){
 
                     try{
-
                         queue.ffmpegProcess.kill();
-
                     }catch{}
 
                     queue.ffmpegProcess = null;
-
                 }
-
 
 
                 if(!queue.loop){
@@ -323,9 +266,7 @@ async function playSong(guild, song) {
                 }
 
 
-
                 queue.current = null;
-
 
 
                 if(queue.songs.length){
@@ -339,7 +280,7 @@ async function playSong(guild, song) {
                             );
 
                         },
-                        1500
+                        1000
                     );
 
                 }
@@ -355,7 +296,6 @@ async function playSong(guild, song) {
             error.message
         );
 
-
         queue.playing = false;
 
     }
@@ -365,9 +305,6 @@ async function playSong(guild, song) {
 
 
 module.exports = {
-
     playSong,
-
     durationToSeconds
-
 };
