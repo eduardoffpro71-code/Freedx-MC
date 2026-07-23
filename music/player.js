@@ -119,11 +119,8 @@ async function playSong(guild, song) {
 
             song.url,
 
-            "--format-sort",
-            "acodec:aac,abr,asr",
-
             "-f",
-            "bestaudio",
+            "bestaudio/best",
 
             "--no-playlist",
 
@@ -143,6 +140,9 @@ async function playSong(guild, song) {
             "--extractor-args",
             "youtube:player_client=android,web",
 
+            "--user-agent",
+            "Mozilla/5.0",
+
             "-o",
             "-"
 
@@ -150,7 +150,7 @@ async function playSong(guild, song) {
 
 
 
-        if (fs.existsSync(cookies)) {
+        if(fs.existsSync(cookies)) {
 
             args.push(
                 "--cookies",
@@ -221,7 +221,8 @@ async function playSong(guild, song) {
                 queue.playing = false;
 
 
-                ffmpegProcess.kill();
+                if(ffmpegProcess)
+                    ffmpegProcess.kill();
 
             }
         );
@@ -232,10 +233,22 @@ async function playSong(guild, song) {
             "data",
             data => {
 
-                console.log(
-                    "FFMPEG:",
-                    data.toString()
-                );
+                const msg =
+                    data.toString();
+
+
+                if(
+                    !msg.includes(
+                        "Connection reset"
+                    )
+                ){
+
+                    console.log(
+                        "FFMPEG:",
+                        msg
+                    );
+
+                }
 
             }
         );
@@ -266,7 +279,6 @@ async function playSong(guild, song) {
         queue.resource = resource;
 
         queue.current = song;
-
 
 
         queue.duration =
@@ -353,6 +365,7 @@ async function playSong(guild, song) {
 
             }
         );
+
 
 
     } catch(error) {
