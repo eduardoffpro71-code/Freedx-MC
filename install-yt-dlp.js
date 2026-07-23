@@ -7,7 +7,7 @@ const url =
 "https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp_linux";
 
 
-function baixar(){
+function baixar(urlAtual){
 
     return new Promise((resolve, reject)=>{
 
@@ -15,24 +15,40 @@ function baixar(){
         console.log("⬇️ Baixando yt-dlp atualizado...");
 
 
-        const out = fs.createWriteStream(file);
+        https.get(urlAtual, res=>{
 
 
+            // segue redirect do GitHub
+            if(
+                res.statusCode >= 300 &&
+                res.statusCode < 400 &&
+                res.headers.location
+            ){
 
-        https.get(url, res=>{
+                return baixar(
+                    res.headers.location
+                )
+                .then(resolve)
+                .catch(reject);
+
+            }
+
 
 
             if(res.statusCode !== 200){
 
-                reject(
+                return reject(
                     new Error(
-                        "Erro download HTTP: " + res.statusCode
+                        "HTTP " + res.statusCode
                     )
                 );
 
-                return;
-
             }
+
+
+
+            const out =
+            fs.createWriteStream(file);
 
 
 
@@ -48,28 +64,18 @@ function baixar(){
                     out.close(()=>{
 
 
-                        try{
+                        fs.chmodSync(
+                            file,
+                            0o755
+                        );
 
 
-                            fs.chmodSync(
-                                file,
-                                0o755
-                            );
+                        console.log(
+                            "✅ yt-dlp atualizado e pronto!"
+                        );
 
 
-                            console.log(
-                                "✅ yt-dlp atualizado e pronto!"
-                            );
-
-
-                            resolve();
-
-
-                        }catch(err){
-
-                            reject(err);
-
-                        }
+                        resolve();
 
 
                     });
@@ -80,13 +86,10 @@ function baixar(){
 
 
 
-        }).on(
+        })
+        .on(
             "error",
-            err=>{
-
-                reject(err);
-
-            }
+            reject
         );
 
 
@@ -96,8 +99,7 @@ function baixar(){
 
 
 
-baixar()
-
+baixar(url)
 .catch(err=>{
 
     console.log(
