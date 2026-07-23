@@ -14,12 +14,13 @@ const queues = require("./queue");
 
 const ytDlpPath = path.join(
     process.cwd(),
-    "yt-dlp.exe"
+    "yt-dlp"
 );
 
 const ytDlp = new YTDlpWrap(
     ytDlpPath
 );
+
 
 function durationToSeconds(duration) {
     if (!duration)
@@ -64,7 +65,6 @@ async function playSong(guild, song) {
 
 
         const args = [
-
             song.url,
 
             "-f",
@@ -92,11 +92,10 @@ async function playSong(guild, song) {
 
             "-o",
             "-"
-
         ];
 
 
-        if(fs.existsSync(cookies)){
+        if(fs.existsSync(cookies)) {
 
             console.log(
                 "🍪 Usando cookies"
@@ -119,7 +118,6 @@ async function playSong(guild, song) {
             spawn(
                 ffmpeg,
                 [
-
                     "-i",
                     "pipe:0",
 
@@ -138,7 +136,6 @@ async function playSong(guild, song) {
                     "error",
 
                     "pipe:1"
-
                 ]
             );
 
@@ -163,9 +160,9 @@ async function playSong(guild, song) {
 
                 queue.playing = false;
 
-                try{
+                try {
                     ffmpegProcess.kill();
-                }catch{}
+                } catch {}
 
             }
         );
@@ -189,12 +186,12 @@ async function playSong(guild, song) {
                 ffmpegProcess.stdout,
                 {
                     inputType: StreamType.Raw,
-                    inlineVolume:true
+                    inlineVolume: true
                 }
             );
 
 
-        if(resource.volume){
+        if(resource.volume) {
 
             resource.volume.setVolume(
                 (queue.volume || 50) / 100
@@ -204,7 +201,6 @@ async function playSong(guild, song) {
 
 
         queue.resource = resource;
-
         queue.current = song;
 
 
@@ -224,7 +220,7 @@ async function playSong(guild, song) {
 
         queue.player.once(
             AudioPlayerStatus.Playing,
-            ()=>{
+            () => {
 
                 queue.startedAt =
                     Date.now();
@@ -239,7 +235,7 @@ async function playSong(guild, song) {
 
         queue.player.once(
             AudioPlayerStatus.Idle,
-            ()=>{
+            () => {
 
                 console.log(
                     "⏹️ Música terminou"
@@ -249,30 +245,28 @@ async function playSong(guild, song) {
                 queue.playing = false;
 
 
-                if(queue.ffmpegProcess){
+                if(queue.ffmpegProcess) {
 
-                    try{
+                    try {
                         queue.ffmpegProcess.kill();
-                    }catch{}
+                    } catch {}
 
                     queue.ffmpegProcess = null;
                 }
 
 
-                if(!queue.loop){
-
+                if(!queue.loop) {
                     queue.songs.shift();
-
                 }
 
 
                 queue.current = null;
 
 
-                if(queue.songs.length){
+                if(queue.songs.length) {
 
                     setTimeout(
-                        ()=>{
+                        () => {
 
                             playSong(
                                 guild,
@@ -289,7 +283,7 @@ async function playSong(guild, song) {
         );
 
 
-    } catch(error){
+    } catch(error) {
 
         console.log(
             "❌ Erro player:",
@@ -301,7 +295,6 @@ async function playSong(guild, song) {
     }
 
 }
-
 
 
 module.exports = {
