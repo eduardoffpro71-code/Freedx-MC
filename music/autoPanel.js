@@ -11,11 +11,26 @@ const fs = require("fs");
 const path = require("path");
 
 
-const configPath =
-path.join(
+const configPath = path.join(
     __dirname,
     "../config.json"
 );
+
+
+
+let config = {};
+
+try {
+
+    config = require("../config.json");
+
+} catch {
+
+    console.log(
+        "⚠️ config.json não encontrado, usando Railway Variables"
+    );
+
+}
 
 
 
@@ -30,11 +45,6 @@ async function createPanel(client){
 
 
     try{
-
-
-        const config =
-        require("../config.json");
-
 
 
         const guild =
@@ -55,21 +65,30 @@ async function createPanel(client){
 
 
 
+        let panelChannel =
+        process.env.PANEL_CHANNEL || config.panelChannel;
+
+
+
+        let panelMessage =
+        process.env.PANEL_MESSAGE || config.panelMessage;
+
+
+
+
         let canal;
 
 
 
-        if(config.panelChannel){
+        if(panelChannel){
 
 
             canal =
             guild.channels.cache.get(
-                config.panelChannel
+                panelChannel
             );
 
-
         }
-
 
 
 
@@ -94,6 +113,10 @@ async function createPanel(client){
 
 
 
+            panelChannel =
+            canal.id;
+
+
             config.panelChannel =
             canal.id;
 
@@ -105,16 +128,14 @@ async function createPanel(client){
 
 
 
-
-
-        if(config.panelMessage){
+        if(panelMessage){
 
 
             try{
 
 
                 await canal.messages.fetch(
-                    config.panelMessage
+                    panelMessage
                 );
 
 
@@ -129,14 +150,11 @@ async function createPanel(client){
             }catch{
 
 
-                config.panelMessage = null;
-
+                panelMessage = null;
 
             }
 
-
         }
-
 
 
 
@@ -180,12 +198,10 @@ Use os botões abaixo para controlar o player.
 
         .addComponents(
 
-
             new ButtonBuilder()
             .setCustomId("music_play")
             .setEmoji("▶️")
             .setStyle(ButtonStyle.Success),
-
 
 
             new ButtonBuilder()
@@ -194,19 +210,16 @@ Use os botões abaixo para controlar o player.
             .setStyle(ButtonStyle.Secondary),
 
 
-
             new ButtonBuilder()
             .setCustomId("music_next")
             .setEmoji("⏭️")
             .setStyle(ButtonStyle.Primary),
 
 
-
             new ButtonBuilder()
             .setCustomId("music_stop")
             .setEmoji("⏹️")
             .setStyle(ButtonStyle.Danger)
-
 
         );
 
@@ -221,12 +234,10 @@ Use os botões abaixo para controlar o player.
 
         .addComponents(
 
-
             new ButtonBuilder()
             .setCustomId("volume_down")
             .setEmoji("🔉")
             .setStyle(ButtonStyle.Secondary),
-
 
 
             new ButtonBuilder()
@@ -235,19 +246,16 @@ Use os botões abaixo para controlar o player.
             .setStyle(ButtonStyle.Secondary),
 
 
-
             new ButtonBuilder()
             .setCustomId("music_loop")
             .setEmoji("🔁")
             .setStyle(ButtonStyle.Success),
 
 
-
             new ButtonBuilder()
             .setCustomId("music_search")
             .setLabel("🔎 Pesquisar")
             .setStyle(ButtonStyle.Primary)
-
 
         );
 
@@ -276,26 +284,32 @@ Use os botões abaixo para controlar o player.
 
 
 
+        config.panelChannel =
+        canal.id;
+
 
         config.panelMessage =
         painel.id;
 
 
 
+        // Só salva se existir config.json local
+        if(fs.existsSync(configPath)){
 
 
+            fs.writeFileSync(
 
-        fs.writeFileSync(
+                configPath,
 
-            configPath,
+                JSON.stringify(
+                    config,
+                    null,
+                    4
+                )
 
-            JSON.stringify(
-                config,
-                null,
-                4
-            )
+            );
 
-        );
+        }
 
 
 
@@ -321,6 +335,7 @@ Use os botões abaixo para controlar o player.
 
 
 }
+
 
 
 
