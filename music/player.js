@@ -106,36 +106,31 @@ async function playSong(guild, song){
 
         const stream = ytDlp.execStream([
 
+    song.url,
 
-            song.url,
+    "-f",
+    "bestaudio/best",
 
+    "--no-playlist",
 
-            "-f",
-            "bestaudio/best",
+    "--no-warnings",
 
+    "--no-check-certificates",
 
-            "--no-playlist",
+    "--force-ipv4",
 
+    "--geo-bypass",
 
-            "--no-warnings",
+    "--cookies",
+    "cookies.txt",
 
+    "--extractor-args",
+    "youtube:player_client=android",
 
-            "--no-check-certificates",
+    "-o",
+    "-"
 
-
-            "--force-ipv4",
-
-
-            "--geo-bypass",
-
-
-            "--cookies",
-            "cookies.txt",
-
-            "-o",
-            "-"
-
-        ]);
+]);
 
 
 
