@@ -24,20 +24,27 @@ module.exports = {
 
 
         if (!voice) {
+
             return message.reply(
                 "🎤 Entre em um canal de voz primeiro!"
             );
+
         }
+
 
 
         const query = args.join(" ");
 
 
+
         if (!query) {
+
             return message.reply(
                 "🎵 Digite o nome da música ou link!"
             );
+
         }
+
 
 
         const loading = await message.reply(
@@ -45,10 +52,12 @@ module.exports = {
         );
 
 
+
         let result;
 
 
         try {
+
 
             result = await play.search(
                 query,
@@ -58,48 +67,75 @@ module.exports = {
             );
 
 
-        } catch (error) {
+        } catch(error) {
+
 
             console.log(
                 "❌ Erro busca:",
                 error.message
             );
 
+
             return loading.edit(
                 "❌ Erro ao procurar música."
             );
+
 
         }
 
 
 
-        if (!result || result.length === 0) {
+
+        if(!result || !result.length){
+
 
             return loading.edit(
                 "❌ Música não encontrada."
             );
 
+
         }
+
+
+
+
+
+        const video = result[0];
 
 
 
         const song = {
 
-            title: result[0].title,
+
+            title:
+            video.title,
+
 
             url:
-            `https://www.youtube.com/watch?v=${result[0].id}`,
+            video.url,
+
+
+            id:
+            video.id,
+
 
             thumbnail:
-            result[0].thumbnails?.[0]?.url || null,
+            video.thumbnails?.[0]?.url || null,
+
 
             duration:
-            result[0].durationRaw || "0:00",
+            video.durationRaw || "0:00",
+
 
             requestedBy:
             message.author.username
 
+
         };
+
+
+
+
 
 
 
@@ -110,21 +146,31 @@ module.exports = {
 
 
 
-        if (
+
+
+
+        if(
             serverQueue &&
             serverQueue.voiceChannel &&
             serverQueue.voiceChannel.id !== voice.id
-        ) {
+        ){
+
 
             return loading.edit(
                 "❌ Já estou tocando em outro canal de voz."
             );
 
+
         }
 
 
 
-        if (!serverQueue) {
+
+
+
+
+        if(!serverQueue){
+
 
 
             const player =
@@ -132,29 +178,43 @@ module.exports = {
 
 
 
+
             const connection =
             joinVoiceChannel({
 
-                channelId: voice.id,
+                channelId:
+                voice.id,
 
-                guildId: message.guild.id,
+
+                guildId:
+                message.guild.id,
+
 
                 adapterCreator:
                 message.guild.voiceAdapterCreator,
 
-                selfDeaf: true
+
+                selfDeaf:true
 
             });
 
 
 
-            connection.subscribe(player);
+
+
+            connection.subscribe(
+                player
+            );
+
+
 
 
 
             serverQueue =
             queues.createQueue(
+
                 message.guild.id,
+
                 {
 
                     voiceChannel: voice,
@@ -167,46 +227,70 @@ module.exports = {
 
                     songs: [],
 
-                    loop: false,
+                    loop:false,
 
-                    volume: 50,
+                    volume:50,
 
-                    current: null,
+                    current:null,
 
-                    startedAt: null,
+                    startedAt:null,
 
-                    duration: 0
+                    duration:0
 
                 }
+
             );
+
+
+
 
 
             console.log(
                 `🔊 Entrou no canal: ${voice.name}`
             );
 
+
         }
 
 
 
-        serverQueue.songs.push(song);
 
 
 
-        if (!serverQueue.playing) {
+
+        serverQueue.songs.push(
+            song
+        );
+
+
+
+
+
+
+
+        if(!serverQueue.playing){
+
 
             playSong(
                 message.guild,
                 song
             );
 
+
         }
 
 
 
+
+
+
+
         await loading.edit(
+
             `🎵 Adicionado: **${song.title}**`
+
         );
+
 
 
     }
