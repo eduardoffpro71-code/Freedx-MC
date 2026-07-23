@@ -3,11 +3,9 @@
   "version": "1.0.0",
   "description": "Bot de música Discord Freedx MC",
   "main": "index.js",
-
   "scripts": {
-    "start": "node install-yt-dlp.js && node index.js"
+    "start": "node index.js"
   },
-
   "dependencies": {
     "@discordjs/voice": "^0.19.2",
     "discord.js": "^14.27.0",
@@ -16,9 +14,5 @@
     "play-dl": "^1.9.7",
     "yt-dlp-wrap": "^2.3.12"
   },
-
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
   "type": "commonjs"
 }
