@@ -109,7 +109,7 @@ async function playSong(guild, song){
     song.url,
 
     "-f",
-    "bestaudio",
+    "bestaudio[ext=m4a]/bestaudio/best",
 
     "--no-playlist",
 
