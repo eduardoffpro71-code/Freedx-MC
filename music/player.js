@@ -10,10 +10,9 @@ const {
 } = require("child_process");
 
 
-const path = require("path");
-
-
 const ffmpegPath = require("ffmpeg-static");
+
+const ytdlp = require("yt-dlp-exec");
 
 
 const queues = require("./queue");
@@ -24,17 +23,13 @@ const queues = require("./queue");
 
 function durationToSeconds(duration) {
 
-
     if(!duration)
         return 0;
 
 
-
-    const parts =
-    duration
-    .split(":")
-    .map(Number);
-
+    const parts = duration
+        .split(":")
+        .map(Number);
 
 
     if(parts.length === 2){
@@ -45,7 +40,6 @@ function durationToSeconds(duration) {
         );
 
     }
-
 
 
     if(parts.length === 3){
@@ -59,7 +53,6 @@ function durationToSeconds(duration) {
     }
 
 
-
     return 0;
 
 }
@@ -70,15 +63,11 @@ function durationToSeconds(duration) {
 
 
 
-
 async function playSong(guild, song){
 
 
-
     const serverQueue =
-    queues.getQueue(
-        guild.id
-    );
+    queues.getQueue(guild.id);
 
 
 
@@ -87,11 +76,8 @@ async function playSong(guild, song){
 
 
 
-
     if(serverQueue.playing)
         return;
-
-
 
 
 
@@ -99,8 +85,8 @@ async function playSong(guild, song){
     guild.id;
 
 
-
-    serverQueue.playing = true;
+    serverQueue.playing =
+    true;
 
 
 
@@ -113,29 +99,38 @@ async function playSong(guild, song){
 
 
 
-    const ytdlp =
-    path.join(
-        process.cwd(),
-        "yt-dlp.exe"
-    );
+    let yt;
 
 
+    try {
 
 
+        yt =
+        ytdlp.exec(
+            song.url,
+            {
+                format: "bestaudio",
+                noPlaylist: true,
+                output: "-"
+            }
+        );
 
 
-    const yt =
-    spawn(
-        ytdlp,
-        [
-            "-f",
-            "bestaudio",
-            "--no-playlist",
-            "-o",
-            "-",
-            song.url
-        ]
-    );
+    }catch(error){
+
+
+        console.log(
+            "❌ Erro iniciar yt-dlp:",
+            error.message
+        );
+
+
+        serverQueue.playing = false;
+
+        return;
+
+    }
+
 
 
 
@@ -163,15 +158,9 @@ async function playSong(guild, song){
 
 
 
+    serverQueue.ytProcess = yt;
 
-    serverQueue.ytProcess =
-    yt;
-
-
-    serverQueue.ffmpegProcess =
-    ffmpeg;
-
-
+    serverQueue.ffmpegProcess = ffmpeg;
 
 
 
@@ -193,11 +182,9 @@ async function playSong(guild, song){
             inputType:
             StreamType.Raw,
 
-            inlineVolume:
-            true
+            inlineVolume:true
         }
     );
-
 
 
 
@@ -216,10 +203,8 @@ async function playSong(guild, song){
 
 
 
-
     serverQueue.current =
     song;
-
 
 
     serverQueue.duration =
@@ -231,18 +216,19 @@ async function playSong(guild, song){
 
 
 
-
     if(!serverQueue.player){
 
         console.log(
             "❌ Player não encontrado"
         );
 
+
         serverQueue.playing = false;
 
         return;
 
     }
+
 
 
 
@@ -284,7 +270,6 @@ async function playSong(guild, song){
 
 
 
-
     serverQueue.player.once(
         AudioPlayerStatus.Idle,
         async ()=>{
@@ -295,14 +280,11 @@ async function playSong(guild, song){
             );
 
 
-
             serverQueue.playing =
             false;
 
 
-
             serverQueue.songs.shift();
-
 
 
 
@@ -310,10 +292,8 @@ async function playSong(guild, song){
             null;
 
 
-
             serverQueue.startedAt =
             null;
-
 
 
             serverQueue.duration =
@@ -324,6 +304,7 @@ async function playSong(guild, song){
 
             try{
 
+
                 if(serverQueue.ytProcess)
                     serverQueue.ytProcess.kill();
 
@@ -333,8 +314,6 @@ async function playSong(guild, song){
 
 
             }catch{}
-
-
 
 
 
@@ -352,10 +331,8 @@ async function playSong(guild, song){
             }
 
 
-
         }
     );
-
 
 
 
@@ -375,8 +352,7 @@ async function playSong(guild, song){
             );
 
 
-            serverQueue.playing =
-            false;
+            serverQueue.playing=false;
 
 
         }
@@ -399,8 +375,7 @@ async function playSong(guild, song){
             );
 
 
-            serverQueue.playing =
-            false;
+            serverQueue.playing=false;
 
 
         }
@@ -423,16 +398,15 @@ async function playSong(guild, song){
             );
 
 
-            serverQueue.playing =
-            false;
+            serverQueue.playing=false;
 
 
         }
     );
 
 
-}
 
+}
 
 
 
