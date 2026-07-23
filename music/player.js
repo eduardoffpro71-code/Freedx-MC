@@ -106,7 +106,7 @@ async function playSong(guild, song){
             song.url,
 
             "-f",
-            "bestaudio/best",
+            "bestaudio",
 
             "--no-playlist",
 
@@ -117,7 +117,7 @@ async function playSong(guild, song){
             "--force-ipv4",
 
             "--extractor-args",
-            "youtube:player_client=android",
+            "youtube:player_client=web",
 
             "-o",
             "-"
@@ -132,7 +132,7 @@ async function playSong(guild, song){
 
         stream.on(
             "data",
-            chunk => {
+            chunk=>{
 
                 if(!audioRecebido){
 
@@ -185,6 +185,8 @@ async function playSong(guild, song){
             ffmpeg,
             [
 
+                "-re",
+
                 "-i",
                 "pipe:0",
 
@@ -204,7 +206,6 @@ async function playSong(guild, song){
 
             ]
         );
-
 
 
 
@@ -298,7 +299,6 @@ async function playSong(guild, song){
             AudioPlayerStatus.Idle,
             ()=>{
 
-
                 console.log(
                     "⏹️ Música terminou"
                 );
@@ -340,14 +340,12 @@ async function playSong(guild, song){
 
                 }
 
-
             }
         );
 
 
 
     } catch(error){
-
 
         console.log(
             "❌ Erro player:",

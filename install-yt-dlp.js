@@ -9,42 +9,86 @@ const url =
 
 function baixar(){
 
-    console.log("⬇️ Baixando yt-dlp atualizado...");
+    return new Promise((resolve, reject)=>{
 
 
-    const out = fs.createWriteStream(file);
+        console.log("⬇️ Baixando yt-dlp atualizado...");
 
 
-    https.get(url, res=>{
-
-        res.pipe(out);
+        const out = fs.createWriteStream(file);
 
 
-        out.on("finish",()=>{
 
-            out.close(()=>{
+        https.get(url, res=>{
 
-                fs.chmodSync(
-                    file,
-                    0o755
+
+            if(res.statusCode !== 200){
+
+                reject(
+                    new Error(
+                        "Erro download HTTP: " + res.statusCode
+                    )
                 );
 
+                return;
 
-                console.log(
-                    "✅ yt-dlp atualizado e pronto!"
-                );
-
-            });
-
-        });
+            }
 
 
-    }).on("error",err=>{
 
-        console.log(
-            "❌ Erro download:",
-            err.message
+            res.pipe(out);
+
+
+
+            out.on(
+                "finish",
+                ()=>{
+
+
+                    out.close(()=>{
+
+
+                        try{
+
+
+                            fs.chmodSync(
+                                file,
+                                0o755
+                            );
+
+
+                            console.log(
+                                "✅ yt-dlp atualizado e pronto!"
+                            );
+
+
+                            resolve();
+
+
+                        }catch(err){
+
+                            reject(err);
+
+                        }
+
+
+                    });
+
+
+                }
+            );
+
+
+
+        }).on(
+            "error",
+            err=>{
+
+                reject(err);
+
+            }
         );
+
 
     });
 
@@ -52,4 +96,13 @@ function baixar(){
 
 
 
-baixar();
+baixar()
+
+.catch(err=>{
+
+    console.log(
+        "❌ Erro yt-dlp:",
+        err.message
+    );
+
+});
