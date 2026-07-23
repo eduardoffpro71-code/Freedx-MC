@@ -129,8 +129,8 @@ async function playSong(guild, song){
             "--geo-bypass",
 
 
-            "--extractor-args",
-            "youtube:player_client=android_vr",
+            "--cookies",
+            "cookies.txt",
 
             "-o",
             "-"
