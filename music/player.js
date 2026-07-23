@@ -77,7 +77,7 @@ async function playSong(guild, song) {
             song.url,
 
             "-f",
-            "bestaudio",
+            "ba/b",
 
             "--no-playlist",
 
@@ -98,7 +98,7 @@ async function playSong(guild, song) {
 
 
             "--extractor-args",
-            "youtube:player_client=web",
+            "youtube:player_client=android,web",
 
 
             "--js-runtimes",
@@ -107,6 +107,10 @@ async function playSong(guild, song) {
 
             "--remote-components",
             "ejs:github",
+
+
+            "--format-sort",
+            "ext:m4a,res:1440",
 
 
             "-o",
@@ -143,8 +147,6 @@ async function playSong(guild, song) {
             spawn(
                 ffmpeg,
                 [
-
-                    "-re",
 
                     "-i",
                     "pipe:0",
@@ -205,20 +207,6 @@ async function playSong(guild, song) {
 
 
 
-        ffmpegProcess.on(
-            "close",
-            code => {
-
-                console.log(
-                    "FFmpeg fechado:",
-                    code
-                );
-
-            }
-        );
-
-
-
         ffmpegProcess.stderr.on(
             "data",
             data => {
@@ -235,6 +223,20 @@ async function playSong(guild, song) {
                     );
 
                 }
+
+            }
+        );
+
+
+
+        ffmpegProcess.on(
+            "close",
+            code => {
+
+                console.log(
+                    "FFmpeg fechado:",
+                    code
+                );
 
             }
         );
@@ -301,11 +303,6 @@ async function playSong(guild, song) {
                 );
 
 
-                if(!queue.playing)
-                    return;
-
-
-
                 queue.playing = false;
 
 
@@ -351,7 +348,6 @@ async function playSong(guild, song) {
                     );
 
                 }
-
 
             }
         );
