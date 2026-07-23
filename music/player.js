@@ -4,135 +4,99 @@ const {
     StreamType
 } = require("@discordjs/voice");
 
-
-const {
-    spawn
-} = require("child_process");
-
+const { spawn } = require("child_process");
 
 const ffmpegPath = require("ffmpeg-static");
 
-const ytdlp = require("yt-dlp-exec");
-
+const YTDlpWrap = require("yt-dlp-wrap").default;
+const ytDlp = new YTDlpWrap();
 
 const queues = require("./queue");
 
 
-
-
-
-function durationToSeconds(duration) {
+function durationToSeconds(duration){
 
     if(!duration)
         return 0;
 
 
-    const parts = duration
-        .split(":")
-        .map(Number);
+    const parts = duration.split(":").map(Number);
 
 
-    if(parts.length === 2){
-
-        return (
-            parts[0] * 60 +
-            parts[1]
-        );
-
-    }
+    if(parts.length === 2)
+        return parts[0] * 60 + parts[1];
 
 
-    if(parts.length === 3){
-
-        return (
-            parts[0] * 3600 +
-            parts[1] * 60 +
-            parts[2]
-        );
-
-    }
+    if(parts.length === 3)
+        return parts[0] * 3600 + parts[1] * 60 + parts[2];
 
 
     return 0;
-
 }
 
 
 
+async function playSong(guild,song){
 
 
-
-
-async function playSong(guild, song){
-
-
-    const serverQueue =
+    const queue =
     queues.getQueue(guild.id);
 
 
+    if(!queue)
+        return;
 
-    if(!serverQueue)
+
+    if(queue.playing)
         return;
 
 
 
-    if(serverQueue.playing)
-        return;
+    queue.guildId = guild.id;
 
-
-
-    serverQueue.guildId =
-    guild.id;
-
-
-    serverQueue.playing =
-    true;
-
+    queue.playing = true;
 
 
     console.log(
-        `🎵 Tocando: ${song.title}`
+        "🎵 Tocando:",
+        song.title
     );
-
-
-
 
 
 
     let yt;
 
 
-    try {
+    try{
 
 
         yt =
-        ytdlp.exec(
+        ytDlp.execStream([
+
             song.url,
-            {
-                format: "bestaudio",
-                noPlaylist: true,
-                output: "-"
-            }
-        );
+
+            "-f",
+            "bestaudio",
+
+            "--no-playlist",
+
+            "-o",
+            "-"
+
+        ]);
 
 
-    }catch(error){
-
+    }catch(err){
 
         console.log(
-            "❌ Erro iniciar yt-dlp:",
-            error.message
+            "❌ yt-dlp:",
+            err.message
         );
 
-
-        serverQueue.playing = false;
-
+        queue.playing=false;
         return;
 
     }
-
-
-
 
 
 
@@ -140,37 +104,51 @@ async function playSong(guild, song){
     spawn(
         ffmpegPath,
         [
+
             "-i",
             "pipe:0",
+
             "-f",
             "s16le",
+
             "-ar",
             "48000",
+
             "-ac",
             "2",
+
             "-loglevel",
             "error",
+
             "pipe:1"
+
         ]
     );
 
 
 
-
-
-    serverQueue.ytProcess = yt;
-
-    serverQueue.ffmpegProcess = ffmpeg;
-
-
-
-
-
-    yt.stdout.pipe(
+    yt.pipe(
         ffmpeg.stdin
     );
 
 
+
+    queue.ytProcess = yt;
+    queue.ffmpegProcess = ffmpeg;
+
+
+
+    ffmpeg.stderr.on(
+        "data",
+        data=>{
+
+            console.log(
+                "FFMPEG:",
+                data.toString()
+            );
+
+        }
+    );
 
 
 
@@ -179,21 +157,17 @@ async function playSong(guild, song){
     createAudioResource(
         ffmpeg.stdout,
         {
-            inputType:
-            StreamType.Raw,
-
+            inputType: StreamType.Raw,
             inlineVolume:true
         }
     );
 
 
 
-
-
     if(resource.volume){
 
         resource.volume.setVolume(
-            serverQueue.volume / 100
+            queue.volume / 100
         );
 
     }
@@ -201,64 +175,33 @@ async function playSong(guild, song){
 
 
 
+    queue.current = song;
 
-
-    serverQueue.current =
-    song;
-
-
-    serverQueue.duration =
+    queue.duration =
     durationToSeconds(
         song.duration
     );
 
 
 
-
-
-    if(!serverQueue.player){
-
-        console.log(
-            "❌ Player não encontrado"
-        );
-
-
-        serverQueue.playing = false;
-
-        return;
-
-    }
-
-
-
-
-
-
-
-    serverQueue.player.play(
+    queue.player.play(
         resource
     );
 
 
 
 
-
-
-
-    serverQueue.player.once(
+    queue.player.once(
         AudioPlayerStatus.Playing,
         ()=>{
 
-
-            serverQueue.startedAt =
+            queue.startedAt =
             Date.now();
-
 
 
             console.log(
                 "▶️ Música começou!"
             );
-
 
         }
     );
@@ -266,13 +209,9 @@ async function playSong(guild, song){
 
 
 
-
-
-
-
-    serverQueue.player.once(
+    queue.player.once(
         AudioPlayerStatus.Idle,
-        async ()=>{
+        async()=>{
 
 
             console.log(
@@ -280,53 +219,33 @@ async function playSong(guild, song){
             );
 
 
-            serverQueue.playing =
-            false;
+            queue.playing=false;
 
 
-            serverQueue.songs.shift();
+            queue.songs.shift();
 
 
+            queue.current=null;
 
-            serverQueue.current =
-            null;
-
-
-            serverQueue.startedAt =
-            null;
-
-
-            serverQueue.duration =
-            0;
-
-
+            queue.startedAt=null;
 
 
             try{
 
+                yt.destroy();
 
-                if(serverQueue.ytProcess)
-                    serverQueue.ytProcess.kill();
-
-
-                if(serverQueue.ffmpegProcess)
-                    serverQueue.ffmpegProcess.kill();
-
+                ffmpeg.kill();
 
             }catch{}
 
 
 
+            if(queue.songs.length){
 
-
-            if(serverQueue.songs.length > 0){
-
-
-                await playSong(
+                playSong(
                     guild,
-                    serverQueue.songs[0]
+                    queue.songs[0]
                 );
-
 
             }
 
@@ -337,83 +256,55 @@ async function playSong(guild, song){
 
 
 
-
-
-
-
-    serverQueue.player.once(
+    queue.player.on(
         "error",
-        error=>{
-
+        err=>{
 
             console.log(
-                "❌ Erro Player:",
-                error.message
+                "❌ Player:",
+                err.message
             );
 
-
-            serverQueue.playing=false;
-
+            queue.playing=false;
 
         }
     );
 
 
-
-
-
-
-
-    yt.once(
+    yt.on(
         "error",
-        error=>{
-
+        err=>{
 
             console.log(
-                "❌ Erro yt-dlp:",
-                error.message
+                "❌ yt-dlp:",
+                err.message
             );
 
-
-            serverQueue.playing=false;
-
+            queue.playing=false;
 
         }
     );
 
 
-
-
-
-
-
-    ffmpeg.once(
+    ffmpeg.on(
         "error",
-        error=>{
-
+        err=>{
 
             console.log(
-                "❌ Erro FFmpeg:",
-                error.message
+                "❌ FFmpeg:",
+                err.message
             );
 
-
-            serverQueue.playing=false;
-
+            queue.playing=false;
 
         }
     );
-
-
 
 }
 
 
 
-
-
-
-module.exports = {
+module.exports={
 
     playSong,
 
