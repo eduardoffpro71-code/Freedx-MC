@@ -4,7 +4,8 @@
   "description": "Bot de música Discord Freedx MC",
   "main": "index.js",
   "scripts": {
-    "start": "node index.js"
+    "start": "node index.js",
+    "postinstall": "node install-yt-dlp.js"
   },
   "dependencies": {
     "@discordjs/voice": "^0.19.2",

@@ -19,11 +19,9 @@ const { playSong } = require("../music/player");
 
 module.exports = {
 
-
     name:"interactionCreate",
 
     once:false,
-
 
 
     async execute(interaction){
@@ -39,26 +37,36 @@ module.exports = {
 
 
 
+        // evita responder o mesmo modal duas vezes
+        if(
+            interaction.replied ||
+            interaction.deferred
+        ){
 
+            console.log(
+                "⚠️ Modal já respondido"
+            );
 
-        const query =
-        interaction.fields.getTextInputValue(
-            "music_query"
-        );
+            return;
 
-
-
-
-
-        await interaction.deferReply({
-            flags: MessageFlags.Ephemeral
-        });
-
-
+        }
 
 
 
-        try {
+        try{
+
+
+            await interaction.deferReply({
+                flags: MessageFlags.Ephemeral
+            });
+
+
+
+            const query =
+            interaction.fields.getTextInputValue(
+                "music_query"
+            );
+
 
 
             const voice =
@@ -76,10 +84,6 @@ module.exports = {
 
 
 
-
-
-
-
             const result =
             await play.search(query,{
                 limit:1
@@ -87,9 +91,10 @@ module.exports = {
 
 
 
-
-
-            if(!result || result.length === 0){
+            if(
+                !result ||
+                result.length === 0
+            ){
 
                 return interaction.editReply(
                     "❌ Música não encontrada."
@@ -99,36 +104,23 @@ module.exports = {
 
 
 
-
-
-
-
             const song = {
 
-                title:
-                result[0].title,
-
+                title: result[0].title,
 
                 url:
                 `https://www.youtube.com/watch?v=${result[0].id}`,
 
-
                 thumbnail:
                 result[0].thumbnails?.[0]?.url || null,
 
-
                 duration:
                 result[0].durationRaw || "0:00",
-
 
                 requestedBy:
                 interaction.user.username
 
             };
-
-
-
-
 
 
 
@@ -139,13 +131,7 @@ module.exports = {
 
 
 
-
-
-
-
-
             if(serverQueue){
-
 
                 if(
                     serverQueue.voiceChannel &&
@@ -158,18 +144,11 @@ module.exports = {
 
                 }
 
-
             }
 
 
 
-
-
-
-
-
             if(!serverQueue){
-
 
 
                 const player =
@@ -177,43 +156,24 @@ module.exports = {
 
 
 
-
-
-
                 const connection =
                 joinVoiceChannel({
 
-                    channelId:
-                    voice.id,
-
+                    channelId: voice.id,
 
                     guildId:
                     interaction.guild.id,
 
-
                     adapterCreator:
                     interaction.guild.voiceAdapterCreator,
 
-
-                    selfDeaf:true,
-
-
-                    selfMute:false
+                    selfDeaf:true
 
                 });
 
 
 
-
-
-
-                connection.subscribe(
-                    player
-                );
-
-
-
-
+                connection.subscribe(player);
 
 
 
@@ -224,7 +184,11 @@ module.exports = {
 
                     {
 
-                        voiceChannel:voice,
+                        guildId:
+                        interaction.guild.id,
+
+                        voiceChannel:
+                        voice,
 
                         textChannel:
                         interaction.channel,
@@ -235,24 +199,21 @@ module.exports = {
 
                         songs:[],
 
+                        volume:50,
+
                         loop:false,
 
-                        volume:50,
+                        playing:false,
 
                         current:null,
 
                         startedAt:null,
 
-                        duration:0,
-
-                        playing:false,
-
-                        panelMessage:null
+                        duration:0
 
                     }
 
                 );
-
 
 
                 console.log(
@@ -265,19 +226,7 @@ module.exports = {
 
 
 
-
-
-
-
-
-            serverQueue.songs.push(
-                song
-            );
-
-
-
-
-
+            serverQueue.songs.push(song);
 
 
 
@@ -294,19 +243,9 @@ module.exports = {
 
 
 
-
-
-
-
-
             return interaction.editReply(
-
                 `🎵 Adicionado: **${song.title}**`
-
             );
-
-
-
 
 
 
@@ -315,19 +254,26 @@ module.exports = {
 
             console.log(
                 "❌ Erro pesquisa:",
-                error
+                error.message
             );
 
 
-            return interaction.editReply(
-                "❌ Erro ao pesquisar música."
-            );
+
+            if(
+                interaction.deferred ||
+                interaction.replied
+            ){
+
+                return interaction.editReply(
+                    "❌ Erro ao pesquisar música."
+                );
+
+            }
 
 
         }
 
 
     }
-
 
 };

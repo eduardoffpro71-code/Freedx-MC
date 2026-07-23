@@ -1,20 +1,10 @@
-try {
-    process.env.FFMPEG_PATH = require("ffmpeg-static");
-} catch {
-    console.log("⚠️ ffmpeg-static não encontrado");
-}
-
-
-const {
-    Client,
-    GatewayIntentBits,
-    Collection
+const { 
+    Client, 
+    GatewayIntentBits, 
+    Collection 
 } = require("discord.js");
 
-
 const fs = require("fs");
-
-
 
 
 // ==========================
@@ -23,36 +13,11 @@ const fs = require("fs");
 
 let config = {};
 
+if (fs.existsSync("./config.json")) {
 
-if(fs.existsSync("./config.json")){
-
-
-    try {
-
-        config = require("./config.json");
-
-    } catch {
-
-        console.log(
-            "⚠️ Erro lendo config.json"
-        );
-
-    }
-
-
-}else{
-
-
-    console.log(
-        "⚠️ config.json não encontrado, usando Railway Variables"
-    );
-
+    config = require("./config.json");
 
 }
-
-
-
-
 
 
 // ==========================
@@ -64,15 +29,11 @@ let settings = {
 };
 
 
-if(fs.existsSync("./settings.json")){
+if (fs.existsSync("./settings.json")) {
 
     settings = require("./settings.json");
 
 }
-
-
-
-
 
 
 // ==========================
@@ -81,7 +42,7 @@ if(fs.existsSync("./settings.json")){
 
 const client = new Client({
 
-    intents:[
+    intents: [
 
         GatewayIntentBits.Guilds,
 
@@ -96,112 +57,87 @@ const client = new Client({
 });
 
 
-
 client.commands = new Collection();
 
 
 
-
-
-
 // ==========================
-// COMANDOS
+// CARREGAR COMANDOS
 // ==========================
 
-if(fs.existsSync("./commands")){
+if (fs.existsSync("./commands")) {
 
 
-const commandFiles = fs
-.readdirSync("./commands")
-.filter(file => file.endsWith(".js"));
+    const files = fs.readdirSync("./commands")
+    .filter(file => file.endsWith(".js"));
 
 
-
-for(const file of commandFiles){
-
-
-    const command =
-    require(`./commands/${file}`);
+    for (const file of files) {
 
 
+        const command = require(`./commands/${file}`);
 
-    if(command.name){
 
-        client.commands.set(
-            command.name,
-            command
-        );
+        if (command.name) {
+
+            client.commands.set(
+                command.name,
+                command
+            );
+
+        }
 
     }
 
-
-}
-
-
 }
 
 
 
-
-
-
-
 // ==========================
-// EVENTOS
+// CARREGAR EVENTOS
 // ==========================
 
-
-if(fs.existsSync("./events")){
-
-
-const eventFiles = fs
-.readdirSync("./events")
-.filter(file => file.endsWith(".js"));
+if (fs.existsSync("./events")) {
 
 
-
-for(const file of eventFiles){
-
-
-    const event =
-    require(`./events/${file}`);
+    const files = fs.readdirSync("./events")
+    .filter(file => file.endsWith(".js"));
 
 
-
-    if(event.once){
-
-
-        client.once(
-            event.name,
-            (...args)=>event.execute(...args)
-        );
+    for (const file of files) {
 
 
-    }else{
+        const event = require(`./events/${file}`);
 
 
-        client.on(
-            event.name,
-            (...args)=>event.execute(...args)
-        );
+        if (event.once) {
 
+
+            client.once(
+                event.name,
+                (...args)=>event.execute(...args)
+            );
+
+
+        } else {
+
+
+            client.on(
+                event.name,
+                (...args)=>event.execute(...args)
+            );
+
+
+        }
 
     }
 
-
 }
-
-
-}
-
-
-
-
 
 
 
 // ==========================
-// PREFIX COMMANDS
+// COMANDOS COM PREFIXO
 // ==========================
 
 client.on(
@@ -222,21 +158,19 @@ async message=>{
 
 
 
-    const args =
-    message.content
+    const args = message.content
     .slice(settings.prefix.length)
     .trim()
     .split(/\s+/);
 
 
 
-    const commandName =
-    args.shift().toLowerCase();
+    const commandName = args.shift()
+    .toLowerCase();
 
 
 
-    const command =
-    client.commands.get(commandName);
+    const command = client.commands.get(commandName);
 
 
 
@@ -245,8 +179,7 @@ async message=>{
 
 
 
-    try{
-
+    try {
 
         await command.execute(
             message,
@@ -254,10 +187,10 @@ async message=>{
         );
 
 
-    }catch(error){
+    } catch(error) {
 
 
-        console.error(
+        console.log(
             "❌ Erro comando:",
             error
         );
@@ -271,22 +204,17 @@ async message=>{
 
 
 
-
-
-
 // ==========================
-// PROTEÇÃO
+// ERROS
 // ==========================
 
 process.on(
 "unhandledRejection",
 error=>{
-
-    console.error(
-        "❌ Unhandled:",
+    console.log(
+        "❌ Erro:",
         error
     );
-
 });
 
 
@@ -294,16 +222,11 @@ error=>{
 process.on(
 "uncaughtException",
 error=>{
-
-    console.error(
+    console.log(
         "❌ Exception:",
         error
     );
-
 });
-
-
-
 
 
 
@@ -312,7 +235,6 @@ error=>{
 // LOGIN
 // ==========================
 
-
 const TOKEN =
 process.env.TOKEN || config.token;
 
@@ -320,17 +242,13 @@ process.env.TOKEN || config.token;
 
 if(!TOKEN){
 
-
     console.log(
-        "❌ TOKEN não encontrado!"
+        "❌ TOKEN não encontrado"
     );
-
 
     process.exit(1);
 
 }
-
-
 
 
 
@@ -340,16 +258,22 @@ client.login(TOKEN)
 
 
     console.log(
-        "🚀 Login realizado!"
+        "🚀 Bot online!"
+    );
+
+
+    console.log(
+        `✅ ${client.user.tag}`
     );
 
 
 })
 
+
 .catch(error=>{
 
 
-    console.error(
+    console.log(
         "❌ Erro login:",
         error
     );

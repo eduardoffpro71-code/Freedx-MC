@@ -39,18 +39,44 @@ module.exports = {
 
 
 
+        // proteção contra resposta duplicada
+        if(
+            interaction.replied ||
+            interaction.deferred
+        ){
+
+            console.log(
+                "⚠️ Botão já respondido"
+            );
+
+            return;
+
+        }
+
+
+
+
         try {
+
 
             await interaction.deferReply({
                 flags: MessageFlags.Ephemeral
             });
 
 
-        } catch {
+        } catch(error) {
+
+
+            console.log(
+                "❌ Erro deferReply:",
+                error.message
+            );
 
             return;
 
         }
+
+
 
 
 
@@ -85,13 +111,11 @@ module.exports = {
 
             case "music_play":
 
-
                 if(serverQueue.player){
 
                     serverQueue.player.unpause();
 
                 }
-
 
                 serverQueue.paused = false;
 
@@ -108,13 +132,11 @@ module.exports = {
 
             case "music_pause":
 
-
                 if(serverQueue.player){
 
                     serverQueue.player.pause();
 
                 }
-
 
                 serverQueue.paused = true;
 
@@ -129,10 +151,8 @@ module.exports = {
 
 
 
-
             case "music_next":
             case "music_skip":
-
 
                 serverQueue.playing = false;
 
@@ -147,7 +167,6 @@ module.exports = {
                 return interaction.editReply(
                     "⏭️ Próxima música."
                 );
-
 
 
 
@@ -186,8 +205,6 @@ module.exports = {
 
 
 
-
-
             case "volume_up":
 
 
@@ -207,12 +224,9 @@ module.exports = {
                 }
 
 
-
                 return interaction.editReply(
                     `🔊 Volume ${serverQueue.volume}%`
                 );
-
-
 
 
 
@@ -239,12 +253,9 @@ module.exports = {
                 }
 
 
-
                 return interaction.editReply(
                     `🔉 Volume ${serverQueue.volume}%`
                 );
-
-
 
 
 
@@ -259,20 +270,13 @@ module.exports = {
                 !serverQueue.loop;
 
 
-
                 return interaction.editReply(
-
                     `🔁 Loop ${
                         serverQueue.loop
-                        ?
-                        "ativado"
-                        :
-                        "desativado"
+                        ? "ativado"
+                        : "desativado"
                     }`
-
                 );
-
-
 
 
 
@@ -293,12 +297,9 @@ module.exports = {
                 .join("\n");
 
 
-
                 return interaction.editReply(
                     `📜 Fila:\n${fila || "vazia"}`
                 );
-
-
 
 
 

@@ -17,31 +17,46 @@ module.exports = {
 
 
         // somente botão
-        if (!interaction.isButton())
+        if(!interaction.isButton())
             return;
 
 
 
-        // botão de pesquisa
-        if (interaction.customId !== "music_search")
+        // botão pesquisa
+        if(interaction.customId !== "music_search")
             return;
-
 
 
 
         try {
 
 
-            const modal = new ModalBuilder()
+            // evita erro de interação duplicada
+            if(
+                interaction.replied ||
+                interaction.deferred
+            ){
 
-                .setCustomId(
-                    "music_search_modal"
-                )
-
-                .setTitle(
-                    "🎵 Pesquisar Música"
+                console.log(
+                    "⚠️ Botão já respondido"
                 );
 
+                return;
+
+            }
+
+
+
+            const modal =
+            new ModalBuilder()
+
+            .setCustomId(
+                "music_search_modal"
+            )
+
+            .setTitle(
+                "🎵 Pesquisar Música"
+            );
 
 
 
@@ -50,25 +65,23 @@ module.exports = {
             const musicInput =
             new TextInputBuilder()
 
-                .setCustomId(
-                    "music_query"
-                )
+            .setCustomId(
+                "music_query"
+            )
 
-                .setLabel(
-                    "Nome ou link da música"
-                )
+            .setLabel(
+                "Nome ou link da música"
+            )
 
-                .setPlaceholder(
-                    "Ex: Matuê, Phonk, YouTube..."
-                )
+            .setPlaceholder(
+                "Ex: Matuê, Phonk, YouTube..."
+            )
 
-                .setRequired(true)
+            .setRequired(true)
 
-                .setStyle(
-                    TextInputStyle.Short
-                );
-
-
+            .setStyle(
+                TextInputStyle.Short
+            );
 
 
 
@@ -76,10 +89,10 @@ module.exports = {
 
             const row =
             new ActionRowBuilder()
-                .addComponents(
-                    musicInput
-                );
 
+            .addComponents(
+                musicInput
+            );
 
 
 
@@ -93,16 +106,13 @@ module.exports = {
 
 
 
-
             await interaction.showModal(
                 modal
             );
 
 
 
-
-
-        } catch(error) {
+        }catch(error){
 
 
             console.log(
