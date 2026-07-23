@@ -119,8 +119,11 @@ async function playSong(guild, song) {
 
             song.url,
 
+            "--format-sort",
+            "acodec:aac,abr,asr",
+
             "-f",
-            "bestaudio[ext=m4a]/bestaudio",
+            "bestaudio",
 
             "--no-playlist",
 
@@ -138,7 +141,7 @@ async function playSong(guild, song) {
             "30",
 
             "--extractor-args",
-            "youtube:player_client=android",
+            "youtube:player_client=android,web",
 
             "-o",
             "-"
@@ -199,38 +202,8 @@ async function playSong(guild, song) {
 
 
 
-        stream.on(
-            "data",
-            chunk => {
-
-                if(
-                    !ffmpegProcess.stdin.destroyed
-                ){
-
-                    ffmpegProcess.stdin.write(
-                        chunk
-                    );
-
-                }
-
-            }
-        );
-
-
-
-        stream.on(
-            "end",
-            () => {
-
-                if(
-                    !ffmpegProcess.stdin.destroyed
-                ){
-
-                    ffmpegProcess.stdin.end();
-
-                }
-
-            }
+        stream.pipe(
+            ffmpegProcess.stdin
         );
 
 
@@ -248,11 +221,7 @@ async function playSong(guild, song) {
                 queue.playing = false;
 
 
-                if(ffmpegProcess){
-
-                    ffmpegProcess.kill();
-
-                }
+                ffmpegProcess.kill();
 
             }
         );
