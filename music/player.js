@@ -20,27 +20,20 @@ const ytDlpPath = path.join(
 
 
 if (fs.existsSync(ytDlpPath)) {
-
     try {
-
         fs.chmodSync(
             ytDlpPath,
             0o755
         );
 
-        console.log(
-            "✅ yt-dlp permissão OK"
-        );
+        console.log("✅ yt-dlp permissão OK");
 
     } catch(err){
-
         console.log(
-            "❌ Erro permissão yt-dlp:",
+            "❌ Erro permissão:",
             err.message
         );
-
     }
-
 }
 
 
@@ -61,10 +54,7 @@ function durationToSeconds(duration){
     if(!duration)
         return 0;
 
-
-    const p = duration
-    .split(":")
-    .map(Number);
+    const p = duration.split(":").map(Number);
 
 
     if(p.length === 2)
@@ -76,7 +66,6 @@ function durationToSeconds(duration){
 
 
     return 0;
-
 }
 
 
@@ -107,13 +96,12 @@ async function playSong(guild, song){
     try {
 
 
-
         const stream = ytDlp.execStream([
 
             song.url,
 
             "-f",
-            "bestaudio",
+            "bestaudio[ext=webm]/bestaudio",
 
             "--no-playlist",
 
@@ -130,24 +118,11 @@ async function playSong(guild, song){
 
         stream.on(
             "data",
-            chunk=>{
+            chunk => {
 
                 console.log(
-                    "📦 Áudio recebido:",
+                    "📦 Recebendo áudio:",
                     chunk.length
-                );
-
-            }
-        );
-
-
-
-        stream.once(
-            "data",
-            ()=>{
-
-                console.log(
-                    "✅ yt-dlp enviou áudio"
                 );
 
             }
@@ -157,7 +132,7 @@ async function playSong(guild, song){
 
         stream.on(
             "error",
-            err=>{
+            err => {
 
                 console.log(
                     "❌ Erro yt-dlp:",
@@ -166,7 +141,6 @@ async function playSong(guild, song){
 
             }
         );
-
 
 
 
@@ -196,10 +170,9 @@ async function playSong(guild, song){
 
 
 
-
         ffmpegProcess.stderr.on(
             "data",
-            data=>{
+            data => {
 
                 console.log(
                     "FFMPEG:",
@@ -222,19 +195,14 @@ async function playSong(guild, song){
 
 
 
-
         const resource =
         createAudioResource(
             ffmpegProcess.stdout,
             {
-
                 inputType: StreamType.Raw,
-
                 inlineVolume:true
-
             }
         );
-
 
 
 
@@ -248,12 +216,9 @@ async function playSong(guild, song){
 
 
 
-        queue.resource =
-        resource;
+        queue.resource = resource;
 
-
-        queue.current =
-        song;
+        queue.current = song;
 
 
 
@@ -267,7 +232,6 @@ async function playSong(guild, song){
         queue.player.play(
             resource
         );
-
 
 
 
@@ -285,7 +249,6 @@ async function playSong(guild, song){
 
             }
         );
-
 
 
 
@@ -313,21 +276,15 @@ async function playSong(guild, song){
 
 
 
-                queue.current = null;
-
-                queue.startedAt = null;
-
-                queue.duration = 0;
-
-
-
-
                 if(!queue.loop){
 
                     queue.songs.shift();
 
                 }
 
+
+
+                queue.current = null;
 
 
 
@@ -340,15 +297,12 @@ async function playSong(guild, song){
 
                 }
 
-
             }
         );
 
 
 
-
     } catch(error){
-
 
         console.log(
             "❌ Erro player:",
@@ -358,19 +312,13 @@ async function playSong(guild, song){
 
         queue.playing = false;
 
-
     }
 
 }
 
 
 
-
-
 module.exports = {
-
     playSong,
-
     durationToSeconds
-
 };
