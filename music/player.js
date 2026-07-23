@@ -24,6 +24,7 @@ const ytDlp = new YTDlpWrap(
 );
 
 
+
 function durationToSeconds(duration) {
 
     if (!duration)
@@ -70,12 +71,21 @@ async function playSong(guild, song) {
         );
 
 
+        console.log(
+            "🍪 Cookies:",
+            fs.existsSync(cookies)
+        );
+
+
+
         const args = [
 
             song.url,
 
+
             "-f",
             "bestaudio/best",
+
 
             "--no-playlist",
 
@@ -83,17 +93,29 @@ async function playSong(guild, song) {
 
             "--force-ipv4",
 
+
             "--retries",
-            "10",
+            "20",
 
             "--fragment-retries",
-            "10",
+            "20",
+
 
             "--socket-timeout",
             "60",
 
+
             "--extractor-args",
-            "youtube:player_client=android",
+            "youtube:player_client=web",
+
+
+            "--remote-components",
+            "ejs:github",
+
+
+            "--js-runtimes",
+            "node",
+
 
             "--output",
             "-"
@@ -103,6 +125,11 @@ async function playSong(guild, song) {
 
 
         if(fs.existsSync(cookies)){
+
+            console.log(
+                "🍪 Usando cookies"
+            );
+
 
             args.push(
                 "--cookies",
@@ -172,20 +199,29 @@ async function playSong(guild, song) {
 
                 queue.playing = false;
 
-                ffmpegProcess.kill();
+
+                if(ffmpegProcess)
+                    ffmpegProcess.kill();
 
             }
         );
 
 
 
-        ffmpegProcess.on(
-            "close",
-            () => {
+        ffmpegProcess.stderr.on(
+            "data",
+            data => {
 
-                if(queue.playing){
+                const msg =
+                    data.toString();
 
-                    queue.player.stop();
+
+                if(msg.trim()){
+
+                    console.log(
+                        "FFMPEG:",
+                        msg
+                    );
 
                 }
 
@@ -218,6 +254,7 @@ async function playSong(guild, song) {
         queue.resource = resource;
 
         queue.current = song;
+
 
 
         queue.duration =
