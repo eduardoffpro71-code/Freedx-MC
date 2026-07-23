@@ -5,13 +5,22 @@ const {
 } = require("@discordjs/voice");
 
 const { spawn } = require("child_process");
+const path = require("path");
 const ffmpeg = require("ffmpeg-static");
 const YTDlpWrap = require("yt-dlp-wrap").default;
 
 const queues = require("./queue");
 
 
-const ytDlp = new YTDlpWrap();
+const ytDlpPath = path.join(
+    process.cwd(),
+    "yt-dlp"
+);
+
+
+const ytDlp = new YTDlpWrap(
+    ytDlpPath
+);
 
 
 
@@ -42,7 +51,6 @@ async function playSong(guild, song) {
     queue.playing = true;
 
     console.log(`🎵 Tocando: ${song.title}`);
-
 
 
     try {
@@ -121,7 +129,6 @@ async function playSong(guild, song) {
 
 
 
-
         queue.player.once(
             AudioPlayerStatus.Playing,
             () => {
@@ -134,7 +141,6 @@ async function playSong(guild, song) {
 
             }
         );
-
 
 
 
@@ -185,10 +191,8 @@ async function playSong(guild, song) {
 
                 }
 
-
             }
         );
-
 
 
 
@@ -218,7 +222,6 @@ async function playSong(guild, song) {
 
 
         queue.playing = false;
-
 
     }
 
