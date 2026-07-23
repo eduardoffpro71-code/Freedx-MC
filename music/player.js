@@ -77,7 +77,7 @@ async function playSong(guild, song) {
 
 
             "-f",
-            "bestaudio/best",
+            "bestaudio[ext=webm]/bestaudio",
 
 
             "--no-playlist",
@@ -86,15 +86,16 @@ async function playSong(guild, song) {
 
             "--ignore-errors",
 
+
             "--force-ipv4",
 
 
             "--retries",
-            "10",
+            "20",
 
 
             "--fragment-retries",
-            "10",
+            "20",
 
 
             "--socket-timeout",
@@ -102,7 +103,7 @@ async function playSong(guild, song) {
 
 
             "--extractor-args",
-            "youtube:player_client=android,web,ios",
+            "youtube:player_client=android,web",
 
 
             "--js-runtimes",
@@ -113,8 +114,12 @@ async function playSong(guild, song) {
             "ejs:github",
 
 
-            "--format-sort",
-            "proto:https",
+            "--downloader",
+            "native",
+
+
+            "--http-chunk-size",
+            "10M",
 
 
             "-o",
@@ -134,13 +139,6 @@ async function playSong(guild, song) {
             args.push(
                 "--cookies",
                 cookies
-            );
-
-        }
-        else{
-
-            console.log(
-                "⚠️ cookies.txt não encontrado"
             );
 
         }
@@ -234,20 +232,6 @@ async function playSong(guild, song) {
                     );
 
                 }
-
-            }
-        );
-
-
-
-        ffmpegProcess.on(
-            "close",
-            code => {
-
-                console.log(
-                    "FFmpeg fechado:",
-                    code
-                );
 
             }
         );
