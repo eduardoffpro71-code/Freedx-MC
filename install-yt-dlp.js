@@ -1,23 +1,24 @@
-const { execSync } = require("child_process");
+const YTDlpWrap = require("yt-dlp-wrap").default;
 
-try {
+async function install() {
 
-    console.log("⬇️ Instalando yt-dlp...");
+    try {
 
-    execSync(
-        "npm install yt-dlp --no-save",
-        {
-            stdio: "inherit"
-        }
-    );
+        console.log("⬇️ Baixando yt-dlp...");
 
-    console.log("✅ yt-dlp instalado!");
+        await YTDlpWrap.downloadFromGithub();
 
-} catch (error) {
+        console.log("✅ yt-dlp pronto!");
 
-    console.log(
-        "❌ Erro instalando yt-dlp:",
-        error.message
-    );
+    } catch (error) {
+
+        console.log(
+            "❌ Erro baixando yt-dlp:",
+            error.message
+        );
+
+    }
 
 }
+
+install();
