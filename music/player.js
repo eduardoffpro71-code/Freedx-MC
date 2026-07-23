@@ -83,7 +83,7 @@ async function playSong(guild, song) {
             song.url,
 
             "-f",
-            "ba[ext=m4a]/ba[ext=webm]/ba/best",
+            "bestaudio[ext=m4a]/bestaudio/best",
 
             "--no-playlist",
 
@@ -179,6 +179,25 @@ async function playSong(guild, song) {
 
 
         stream.on(
+            "end",
+            () => {
+
+                try {
+
+                    if(!ffmpegProcess.stdin.destroyed){
+
+                        ffmpegProcess.stdin.end();
+
+                    }
+
+                } catch(e){}
+
+            }
+        );
+
+
+
+        stream.on(
             "error",
             err => {
 
@@ -191,22 +210,12 @@ async function playSong(guild, song) {
                 queue.playing = false;
 
 
-                if(ffmpegProcess)
+                try {
+
                     ffmpegProcess.kill();
 
+                } catch(e){}
 
-                setTimeout(()=>{
-
-                    if(queue.songs.length){
-
-                        playSong(
-                            guild,
-                            queue.songs[0]
-                        );
-
-                    }
-
-                },3000);
 
             }
         );
@@ -237,6 +246,7 @@ async function playSong(guild, song) {
         queue.resource = resource;
 
         queue.current = song;
+
 
 
         queue.duration =
@@ -282,9 +292,19 @@ async function playSong(guild, song) {
                 queue.playing = false;
 
 
+
                 if(queue.ffmpegProcess){
 
-                    queue.ffmpegProcess.kill();
+                    try {
+
+                        if(queue.ffmpegProcess.exitCode === null){
+
+                            queue.ffmpegProcess.stdin.end();
+
+                        }
+
+                    } catch(e){}
+
 
                     queue.ffmpegProcess = null;
 
