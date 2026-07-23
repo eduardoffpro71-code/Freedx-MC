@@ -24,14 +24,36 @@ module.exports = {
         );
 
 
+        try {
+
+
+            // cria painel automático
+            await createPanel(client);
+
+
+            console.log(
+                "✅ Painel automático carregado!"
+            );
+
+
+
+        } catch(error) {
+
+
+            console.log(
+                "⚠️ Erro no painel:",
+                error.message
+            );
+
+
+        }
+
+
 
         try {
 
 
-            await createPanel(client);
-
-
-
+            // inicia atualizador
             startPanelUpdater(client);
 
 
@@ -46,7 +68,7 @@ module.exports = {
 
 
             console.log(
-                "❌ Erro ao iniciar sistema:",
+                "❌ Erro no atualizador:",
                 error.message
             );
 

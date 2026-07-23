@@ -6,6 +6,7 @@ const {
 const queues = require("./queue");
 
 
+// CONFIG SEGURO
 let config = {};
 
 try {
@@ -25,65 +26,52 @@ let updaterStarted = false;
 
 
 
-function formatTime(seconds){
+function formatTime(seconds) {
 
-    if(!seconds || seconds < 0){
-
+    if (!seconds || seconds < 0) {
         return "0:00";
-
     }
 
 
-    const minutes =
-    Math.floor(seconds / 60);
+    const minutes = Math.floor(seconds / 60);
 
-
-    const secs =
-    seconds % 60;
+    const secs = seconds % 60;
 
 
     return `${minutes}:${secs
         .toString()
-        .padStart(2,"0")}`;
+        .padStart(2, "0")}`;
 
 }
 
 
 
 
-function progressBar(current,total){
+function progressBar(current, total) {
 
     const size = 20;
 
 
-    if(!total || total <= 0){
-
+    if (!total || total <= 0) {
         return "━━━━━━━━━━━━━━━━━━━━";
-
     }
 
 
-    const percent =
-    Math.min(
+    const percent = Math.min(
         current / total,
         1
     );
 
 
-    const position =
-    Math.floor(
+    const position = Math.floor(
         size * percent
     );
 
 
     return (
-        "━".repeat(position)
-        +
-        "🔵"
-        +
-        "━".repeat(
-            size - position
-        )
+        "━".repeat(position) +
+        "🔵" +
+        "━".repeat(size - position)
     );
 
 }
@@ -92,135 +80,110 @@ function progressBar(current,total){
 
 
 
-async function updatePanel(client, queue){
+async function updatePanel(client, queue) {
 
 
-    if(
+    if (
         !queue.current ||
         !queue.startedAt
-    ){
-
+    ) {
         return;
-
     }
 
 
 
     const panelChannel =
-    process.env.PANEL_CHANNEL || config.panelChannel;
+        process.env.PANEL_CHANNEL ||
+        config.panelChannel;
 
 
     const panelMessage =
-    process.env.PANEL_MESSAGE || config.panelMessage;
+        process.env.PANEL_MESSAGE ||
+        config.panelMessage;
 
 
 
-    if(
+    if (
         !panelChannel ||
         !panelMessage
-    ){
-
+    ) {
         return;
-
     }
 
 
 
 
-
-    try{
+    try {
 
 
         const canal =
-        await client.channels.fetch(
-            panelChannel
-        );
+            await client.channels.fetch(
+                panelChannel
+            );
 
 
-        if(!canal)
-            return;
-
+        if (!canal) return;
 
 
 
         const mensagem =
-        await canal.messages.fetch(
-            panelMessage
-        );
-
+            await canal.messages.fetch(
+                panelMessage
+            );
 
 
 
         const elapsed =
-        Math.floor(
-            (Date.now() - queue.startedAt) / 1000
-        );
-
+            Math.floor(
+                (Date.now() - queue.startedAt) / 1000
+            );
 
 
         const total =
-        queue.duration || 0;
+            queue.duration || 0;
 
 
 
 
         const embed =
-        new EmbedBuilder()
+            new EmbedBuilder()
 
-        .setColor("#00FFFF")
+            .setColor("#00FFFF")
 
-        .setTitle(
-            "🎵 Freedx MC • Tocando Agora"
-        )
+            .setTitle(
+                "🎵 Freedx MC • Tocando Agora"
+            )
 
-        .setDescription(
-
+            .setDescription(
 `
 🎶 **${queue.current.title}**
 
-
-${progressBar(
-    elapsed,
-    total
-)}
-
+${progressBar(elapsed, total)}
 
 ⏱️ ${formatTime(elapsed)} / ${formatTime(total)}
-
 
 👤 Pedido por:
 **${queue.current.requestedBy || "Desconhecido"}**
 
-
 🔊 Volume:
-**${queue.volume}%**
-
+**${queue.volume || 100}%**
 
 🔁 Loop:
-**${
-queue.loop
-?
-"Ativado"
-:
-"Desativado"
-}**
+**${queue.loop ? "Ativado" : "Desativado"}**
 `
+            )
 
-        )
+            .setFooter({
+                text:
+                "Freedx MC • Music System"
+            })
 
-        .setFooter({
-
-            text:
-            "Freedx MC • Music System"
-
-        })
-
-        .setTimestamp();
+            .setTimestamp();
 
 
 
 
-        if(queue.current.thumbnail){
+        if (queue.current.thumbnail) {
 
             embed.setThumbnail(
                 queue.current.thumbnail
@@ -231,18 +194,13 @@ queue.loop
 
 
 
-
         await mensagem.edit({
-
-            embeds:[
-                embed
-            ]
-
+            embeds: [embed]
         });
 
 
 
-    }catch(error){
+    } catch(error) {
 
 
         console.log(
@@ -260,11 +218,10 @@ queue.loop
 
 
 
+function startPanelUpdater(client) {
 
-function startPanelUpdater(client){
 
-
-    if(updaterStarted)
+    if (updaterStarted)
         return;
 
 
@@ -279,17 +236,15 @@ function startPanelUpdater(client){
 
 
 
+    setInterval(async () => {
 
 
-    setInterval(async()=>{
+        try {
 
 
-        try{
-
-
-            for(
+            for (
                 const queue of queues.queues.values()
-            ){
+            ) {
 
 
                 await updatePanel(
@@ -301,7 +256,8 @@ function startPanelUpdater(client){
             }
 
 
-        }catch(error){
+
+        } catch(error) {
 
 
             console.log(
@@ -313,12 +269,11 @@ function startPanelUpdater(client){
         }
 
 
-    },5000);
 
+    }, 5000);
 
 
 }
-
 
 
 
