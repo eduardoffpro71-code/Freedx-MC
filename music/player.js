@@ -122,10 +122,10 @@ const stream = ytDlp.execStream([
     "--geo-bypass",
 
     "--cookies",
-    path.join(process.cwd(), "cookies.txt"),
+    path.resolve(__dirname, "../cookies.txt"),
 
     "--extractor-args",
-    "youtube:player_client=android,web",
+    "youtube:player_client=tv",
 
     "--no-part",
 
