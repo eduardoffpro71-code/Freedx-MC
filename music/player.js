@@ -22,21 +22,32 @@ const ytDlpPath = path.join(
 if (fs.existsSync(ytDlpPath)) {
 
     try {
+
         fs.chmodSync(
             ytDlpPath,
             0o755
         );
 
-        console.log("✅ yt-dlp permissão OK");
-
-    } catch(e) {
         console.log(
-            "❌ Erro permissão:",
-            e.message
+            "✅ yt-dlp permissão OK"
         );
+
+    } catch(err){
+
+        console.log(
+            "❌ Erro permissão yt-dlp:",
+            err.message
+        );
+
     }
 
 }
+
+
+console.log(
+    "🎵 yt-dlp:",
+    ytDlpPath
+);
 
 
 const ytDlp = new YTDlpWrap(
@@ -47,23 +58,32 @@ const ytDlp = new YTDlpWrap(
 
 function durationToSeconds(duration){
 
-    if(!duration) return 0;
+    if(!duration)
+        return 0;
 
-    const p = duration.split(":").map(Number);
+
+    const p = duration
+    .split(":")
+    .map(Number);
+
 
     if(p.length === 2)
         return p[0] * 60 + p[1];
 
+
     if(p.length === 3)
         return p[0] * 3600 + p[1] * 60 + p[2];
 
+
     return 0;
+
 }
 
 
 
 
 async function playSong(guild, song){
+
 
     const queue = queues.getQueue(
         guild.id
@@ -74,6 +94,7 @@ async function playSong(guild, song){
         return;
 
 
+
     queue.playing = true;
 
 
@@ -82,7 +103,9 @@ async function playSong(guild, song){
     );
 
 
+
     try {
+
 
 
         const stream = ytDlp.execStream([
@@ -90,30 +113,60 @@ async function playSong(guild, song){
             song.url,
 
             "-f",
-            "bestaudio/best",
+            "bestaudio",
 
             "--no-playlist",
 
-            "--quiet",
-
             "--no-warnings",
 
-            "-o",
-            "-"
+            "--no-check-certificates",
+
+            "--extractor-args",
+            "youtube:player_client=android"
 
         ]);
 
 
 
         stream.on(
+            "data",
+            chunk=>{
+
+                console.log(
+                    "📦 Áudio recebido:",
+                    chunk.length
+                );
+
+            }
+        );
+
+
+
+        stream.once(
+            "data",
+            ()=>{
+
+                console.log(
+                    "✅ yt-dlp enviou áudio"
+                );
+
+            }
+        );
+
+
+
+        stream.on(
             "error",
             err=>{
+
                 console.log(
                     "❌ Erro yt-dlp:",
                     err.message
                 );
+
             }
         );
+
 
 
 
@@ -143,6 +196,7 @@ async function playSong(guild, song){
 
 
 
+
         ffmpegProcess.stderr.on(
             "data",
             data=>{
@@ -168,14 +222,19 @@ async function playSong(guild, song){
 
 
 
+
         const resource =
         createAudioResource(
             ffmpegProcess.stdout,
             {
+
                 inputType: StreamType.Raw,
+
                 inlineVolume:true
+
             }
         );
+
 
 
 
@@ -189,8 +248,13 @@ async function playSong(guild, song){
 
 
 
-        queue.resource = resource;
-        queue.current = song;
+        queue.resource =
+        resource;
+
+
+        queue.current =
+        song;
+
 
 
         queue.duration =
@@ -206,12 +270,14 @@ async function playSong(guild, song){
 
 
 
+
         queue.player.once(
             AudioPlayerStatus.Playing,
             ()=>{
 
                 queue.startedAt =
                 Date.now();
+
 
                 console.log(
                     "▶️ Música começou!"
@@ -248,8 +314,11 @@ async function playSong(guild, song){
 
 
                 queue.current = null;
+
                 queue.startedAt = null;
+
                 queue.duration = 0;
+
 
 
 
@@ -258,6 +327,7 @@ async function playSong(guild, song){
                     queue.songs.shift();
 
                 }
+
 
 
 
@@ -279,6 +349,7 @@ async function playSong(guild, song){
 
     } catch(error){
 
+
         console.log(
             "❌ Erro player:",
             error.message
@@ -287,13 +358,19 @@ async function playSong(guild, song){
 
         queue.playing = false;
 
+
     }
 
 }
 
 
 
+
+
 module.exports = {
+
     playSong,
+
     durationToSeconds
+
 };
