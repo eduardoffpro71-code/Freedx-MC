@@ -115,48 +115,44 @@ async function playSong(guild, song) {
 
 
 
-        const args = [
+const args = [
 
-            song.url,
+    song.url,
 
+    "-f",
+    "bestaudio/best",
 
-            "-f",
-            "bestaudio/best",
+    "--buffer-size",
+    "16K",
 
+    "--fragment-retries",
+    "infinite",
 
-            "--downloader",
-            "ffmpeg",
+    "--retries",
+    "infinite",
 
+    "--no-playlist",
 
-            "--hls-use-mpegts",
+    "--no-warnings",
 
+    "--no-check-certificates",
 
-            "--no-playlist",
+    "--force-ipv4",
 
-            "--no-warnings",
+    "--geo-bypass",
 
-            "--no-check-certificates",
+    "--extractor-args",
+    "youtube:player_client=android,web",
 
-            "--force-ipv4",
+    "--user-agent",
+    "Mozilla/5.0",
 
-            "--geo-bypass",
+    "--no-part",
 
+    "-o",
+    "-"
 
-            "--extractor-args",
-            "youtube:player_client=android",
-
-
-            "--user-agent",
-            "Mozilla/5.0",
-
-
-            "--no-part",
-
-
-            "-o",
-            "-"
-
-        ];
+];
 
 
 
