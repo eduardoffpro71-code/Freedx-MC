@@ -70,9 +70,6 @@ async function playSong(guild, song) {
 
             song.url,
 
-            "-f",
-            "best",
-
             "--no-playlist",
 
             "--no-warnings",
@@ -91,7 +88,7 @@ async function playSong(guild, song) {
             "60",
 
             "--extractor-args",
-            "youtube:player_client=android,ios",
+            "youtube:player_client=android",
 
             "-o",
             "-"
@@ -125,7 +122,6 @@ async function playSong(guild, song) {
             spawn(
                 ffmpeg,
                 [
-
                     "-i",
                     "pipe:0",
 
@@ -144,7 +140,6 @@ async function playSong(guild, song) {
                     "error",
 
                     "pipe:1"
-
                 ]
             );
 
@@ -217,7 +212,6 @@ async function playSong(guild, song) {
 
 
         queue.resource = resource;
-
         queue.current = song;
 
 
