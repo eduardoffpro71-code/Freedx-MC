@@ -83,7 +83,7 @@ async function playSong(guild, song) {
             song.url,
 
             "-f",
-            "bestaudio[ext=m4a]/bestaudio/best",
+            "bestaudio/best",
 
             "--no-playlist",
 
@@ -104,9 +104,6 @@ async function playSong(guild, song) {
 
             "--extractor-args",
             "youtube:player_client=android",
-
-            "--user-agent",
-            "Mozilla/5.0",
 
             "--output",
             "-"
@@ -132,9 +129,7 @@ async function playSong(guild, song) {
 
 
         const stream =
-            ytDlp.execStream(
-                args
-            );
+            ytDlp.execStream(args);
 
 
 
@@ -142,6 +137,8 @@ async function playSong(guild, song) {
             spawn(
                 ffmpeg,
                 [
+
+                    "-re",
 
                     "-i",
                     "pipe:0",
@@ -179,25 +176,6 @@ async function playSong(guild, song) {
 
 
         stream.on(
-            "end",
-            () => {
-
-                try {
-
-                    if(!ffmpegProcess.stdin.destroyed){
-
-                        ffmpegProcess.stdin.end();
-
-                    }
-
-                } catch(e){}
-
-            }
-        );
-
-
-
-        stream.on(
             "error",
             err => {
 
@@ -210,12 +188,23 @@ async function playSong(guild, song) {
                 queue.playing = false;
 
 
-                try {
-
+                try{
                     ffmpegProcess.kill();
+                }catch(e){}
 
-                } catch(e){}
+            }
+        );
 
+
+
+        ffmpegProcess.on(
+            "error",
+            err => {
+
+                console.log(
+                    "❌ FFmpeg:",
+                    err.message
+                );
 
             }
         );
@@ -246,7 +235,6 @@ async function playSong(guild, song) {
         queue.resource = resource;
 
         queue.current = song;
-
 
 
         queue.duration =
@@ -295,15 +283,11 @@ async function playSong(guild, song) {
 
                 if(queue.ffmpegProcess){
 
-                    try {
+                    try{
 
-                        if(queue.ffmpegProcess.exitCode === null){
+                        queue.ffmpegProcess.kill();
 
-                            queue.ffmpegProcess.stdin.end();
-
-                        }
-
-                    } catch(e){}
+                    }catch(e){}
 
 
                     queue.ffmpegProcess = null;
@@ -317,6 +301,7 @@ async function playSong(guild, song) {
                     queue.songs.shift();
 
                 }
+
 
 
                 queue.current = null;
