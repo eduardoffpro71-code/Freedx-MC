@@ -115,39 +115,35 @@ async function playSong(guild, song) {
 
 
 
-const args = [
+        const args = [
 
-    song.url,
+            song.url,
 
-    "-f",
-    "best",
+            "-f",
+            "bestaudio[ext=m4a]/bestaudio",
 
-    "--no-playlist",
+            "--no-playlist",
 
-    "--no-warnings",
+            "--no-warnings",
 
-    "--no-check-certificates",
+            "--force-ipv4",
 
-    "--force-ipv4",
+            "--retries",
+            "10",
 
-    "--geo-bypass",
+            "--fragment-retries",
+            "10",
 
-    "--extractor-args",
-    "youtube:player_client=android",
+            "--socket-timeout",
+            "30",
 
-    "--user-agent",
-    "Mozilla/5.0",
+            "--extractor-args",
+            "youtube:player_client=android",
 
-    "--retries",
-    "10",
+            "-o",
+            "-"
 
-    "--fragment-retries",
-    "10",
-
-    "-o",
-    "-"
-
-];
+        ];
 
 
 
@@ -166,22 +162,6 @@ const args = [
             ytDlp.execStream(
                 args
             );
-
-
-
-        stream.on(
-            "error",
-            err => {
-
-                console.log(
-                    "❌ Erro yt-dlp:",
-                    err.message
-                );
-
-                queue.playing = false;
-
-            }
-        );
 
 
 
@@ -214,6 +194,71 @@ const args = [
 
 
 
+        queue.ffmpegProcess =
+            ffmpegProcess;
+
+
+
+        stream.on(
+            "data",
+            chunk => {
+
+                if(
+                    !ffmpegProcess.stdin.destroyed
+                ){
+
+                    ffmpegProcess.stdin.write(
+                        chunk
+                    );
+
+                }
+
+            }
+        );
+
+
+
+        stream.on(
+            "end",
+            () => {
+
+                if(
+                    !ffmpegProcess.stdin.destroyed
+                ){
+
+                    ffmpegProcess.stdin.end();
+
+                }
+
+            }
+        );
+
+
+
+        stream.on(
+            "error",
+            err => {
+
+                console.log(
+                    "❌ Erro yt-dlp:",
+                    err.message
+                );
+
+
+                queue.playing = false;
+
+
+                if(ffmpegProcess){
+
+                    ffmpegProcess.kill();
+
+                }
+
+            }
+        );
+
+
+
         ffmpegProcess.stderr.on(
             "data",
             data => {
@@ -228,17 +273,6 @@ const args = [
 
 
 
-        stream.pipe(
-            ffmpegProcess.stdin
-        );
-
-
-
-        queue.ffmpegProcess =
-            ffmpegProcess;
-
-
-
         const resource =
             createAudioResource(
                 ffmpegProcess.stdout,
@@ -250,7 +284,7 @@ const args = [
 
 
 
-        if (resource.volume) {
+        if(resource.volume){
 
             resource.volume.setVolume(
                 (queue.volume || 50) / 100
@@ -334,9 +368,16 @@ const args = [
 
                 if(queue.songs.length){
 
-                    playSong(
-                        guild,
-                        queue.songs[0]
+                    setTimeout(
+                        () => {
+
+                            playSong(
+                                guild,
+                                queue.songs[0]
+                            );
+
+                        },
+                        1000
                     );
 
                 }
