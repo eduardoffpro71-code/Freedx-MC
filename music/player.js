@@ -80,22 +80,10 @@ console.log("🚀 PLAYER NOVO SEM -f");
 const yt = spawn(
     ytDlp,
     [
-        "-g",
-
-        "--no-playlist",
-
-        "--no-warnings",
-
-        "--force-ipv4",
+        "--list-formats",
 
         "--cookies",
         cookies,
-
-        "--extractor-args",
-        "youtube:player_client=web,android",
-
-        "-f",
-        "ba/b",
 
         song.url
     ]
