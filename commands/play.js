@@ -55,25 +55,56 @@ module.exports = {
 
 
 
-        let result;
+        let result = [];
+
 
 
         try {
 
 
-            result = await play.search(
-                query,
-                {
-                    limit: 1
+            // se for link do youtube
+            if(play.yt_validate(query) === "video"){
+
+
+                result = [
+                    {
+                        title: query,
+                        url: query,
+                        id: query
+                    }
+                ];
+
+
+            } else {
+
+
+
+                const search =
+                await play.search(
+                    query,
+                    {
+                        limit: 1
+                    }
+                );
+
+
+
+                if(search){
+
+                    result = search;
+
                 }
-            );
+
+
+            }
+
 
 
         } catch(error) {
 
 
             console.log(
-                "❌ Erro busca:",
+                "❌ Erro pesquisa:",
                 error.message
             );
 
@@ -88,7 +119,10 @@ module.exports = {
 
 
 
-        if(!result || !result.length){
+
+
+
+        if(!Array.isArray(result) || result.length === 0){
 
 
             return loading.edit(
@@ -102,28 +136,39 @@ module.exports = {
 
 
 
+
         const video = result[0];
+
+
 
 
 
         const song = {
 
 
-            title: video.title,
+            title:
+            video.title || "Música",
 
 
-            url: video.url,
+
+            url:
+            video.url,
 
 
-            id: video.id,
+
+            id:
+            video.id || null,
+
 
 
             thumbnail:
             video.thumbnails?.[0]?.url || null,
 
 
+
             duration:
             video.durationRaw || "0:00",
+
 
 
             requestedBy:
@@ -137,10 +182,14 @@ module.exports = {
 
 
 
+
+
         let serverQueue =
         queues.getQueue(
             message.guild.id
         );
+
+
 
 
 
@@ -169,6 +218,7 @@ module.exports = {
 
 
 
+
         if(!serverQueue){
 
 
@@ -184,16 +234,20 @@ module.exports = {
             joinVoiceChannel({
 
 
+
                 channelId:
                 voice.id,
+
 
 
                 guildId:
                 message.guild.id,
 
 
+
                 adapterCreator:
                 message.guild.voiceAdapterCreator,
+
 
 
                 selfDeaf:true
@@ -222,19 +276,14 @@ module.exports = {
 
                 {
 
-
                     voiceChannel: voice,
-
 
                     textChannel:
                     message.channel,
 
-
                     connection,
 
-
                     player
-
 
                 }
 
@@ -258,9 +307,11 @@ module.exports = {
 
 
 
+
         serverQueue.songs.push(
             song
         );
+
 
 
 
@@ -286,7 +337,6 @@ module.exports = {
         if(!serverQueue.playing){
 
 
-
             playSong(
 
                 message.guild,
@@ -297,8 +347,6 @@ module.exports = {
 
 
         }
-
-
 
 
 
