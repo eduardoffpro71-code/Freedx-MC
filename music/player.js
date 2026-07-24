@@ -6,7 +6,6 @@ const {
 
 
 const { spawn } = require("child_process");
-const path = require("path");
 
 const ffmpeg = require("ffmpeg-static");
 
@@ -26,15 +25,12 @@ async function playSong(guild, queue) {
 
     if(queue.songs.length === 0){
 
-
         queue.playing = false;
         queue.current = null;
 
         return;
 
     }
-
-
 
 
 
@@ -53,29 +49,27 @@ async function playSong(guild, queue) {
 
 
 
-
-
-
     try {
 
 
-
-        const ytDlp = path.join(
-            process.cwd(),
-            "yt-dlp.exe"
-        );
+        // Railway usa Linux, então usa yt-dlp instalado no sistema
+        const ytDlp = "yt-dlp";
 
 
 
         const yt = spawn(
+
             ytDlp,
+
             [
                 "-f",
                 "bestaudio",
+                "--no-playlist",
                 "-o",
                 "-",
                 song.url
             ],
+
             {
                 stdio:[
                     "ignore",
@@ -83,6 +77,7 @@ async function playSong(guild, queue) {
                     "pipe"
                 ]
             }
+
         );
 
 
@@ -92,10 +87,39 @@ async function playSong(guild, queue) {
 
 
 
+        yt.stderr.on(
+            "data",
+            data => {
+
+                const msg =
+                data.toString();
+
+                if(
+                    !msg.includes("WARNING")
+                ){
+
+                    console.log(
+                        "yt-dlp:",
+                        msg
+                    );
+
+                }
+
+            }
+        );
+
+
+
+
+
+
 
         const ff = spawn(
+
             ffmpeg,
+
             [
+
                 "-i",
                 "pipe:0",
 
@@ -115,12 +139,15 @@ async function playSong(guild, queue) {
                 "2",
 
                 "pipe:1"
+
             ]
+
         );
 
 
 
         queue.ffmpegProcess = ff;
+
 
 
 
@@ -133,13 +160,13 @@ async function playSong(guild, queue) {
 
 
 
-
         const resource =
         createAudioResource(
 
             ff.stdout,
 
             {
+
                 inputType:
                 StreamType.Raw,
 
@@ -174,6 +201,7 @@ async function playSong(guild, queue) {
 
 
 
+
         queue.player.once(
 
             AudioPlayerStatus.Idle,
@@ -184,13 +212,10 @@ async function playSong(guild, queue) {
                 queue.songs.shift();
 
 
-
                 queue.current = null;
 
 
-
                 queue.playing = false;
-
 
 
                 queue.ytProcess = null;
@@ -214,8 +239,12 @@ async function playSong(guild, queue) {
 
 
 
+
+
         queue.player.on(
+
             "error",
+
             error => {
 
 
@@ -225,10 +254,12 @@ async function playSong(guild, queue) {
                 );
 
 
+
                 queue.playing = false;
 
 
                 queue.songs.shift();
+
 
 
                 playSong(
@@ -236,6 +267,23 @@ async function playSong(guild, queue) {
                     queue
                 );
 
+
+            }
+
+        );
+
+
+
+
+
+        yt.on(
+            "error",
+            error => {
+
+                console.log(
+                    "❌ Erro yt-dlp:",
+                    error.message
+                );
 
             }
         );
@@ -250,7 +298,7 @@ async function playSong(guild, queue) {
 
         console.log(
             "❌ Erro ao tocar:",
-            error
+            error.message
         );
 
 
@@ -258,9 +306,7 @@ async function playSong(guild, queue) {
         queue.playing = false;
 
 
-
     }
-
 
 
 }
