@@ -1,6 +1,5 @@
 const {
-    joinVoiceChannel,
-    createAudioPlayer
+    joinVoiceChannel
 } = require("@discordjs/voice");
 
 
@@ -19,10 +18,12 @@ module.exports = {
     name: "play",
 
 
+
     async execute(message, args) {
 
 
         const voice = message.member.voice.channel;
+
 
 
         if(!voice){
@@ -62,27 +63,23 @@ module.exports = {
         try {
 
 
-            // LINK DIRETO
-            if(
-                query.startsWith("http")
-            ){
+
+            if(query.startsWith("http")){
 
 
                 song = {
 
-                    title:
-                    query,
+                    title: query,
 
-                    url:
-                    query,
+                    url: query,
 
-                    source:
-                    "direct",
+                    source: "direct",
 
                     requestedBy:
                     message.author.username
 
                 };
+
 
 
             }else{
@@ -94,7 +91,6 @@ module.exports = {
 
 
                 if(
-                    !search ||
                     !search.videos ||
                     search.videos.length === 0
                 ){
@@ -113,7 +109,6 @@ module.exports = {
 
 
                 song = {
-
 
                     title:
                     video.title,
@@ -142,7 +137,6 @@ module.exports = {
                     requestedBy:
                     message.author.username
 
-
                 };
 
 
@@ -170,10 +164,12 @@ module.exports = {
 
 
 
+
         let serverQueue =
         queues.getQueue(
             message.guild.id
         );
+
 
 
 
@@ -185,11 +181,9 @@ module.exports = {
             serverQueue.voiceChannel.id !== voice.id
         ){
 
-
             return loading.edit(
                 "❌ Estou tocando em outro canal."
             );
-
 
         }
 
@@ -197,12 +191,9 @@ module.exports = {
 
 
 
+
+
         if(!serverQueue){
-
-
-            const player =
-            createAudioPlayer();
-
 
 
 
@@ -229,23 +220,14 @@ module.exports = {
 
 
 
-            connection.subscribe(
-                player
-            );
-
-
-
 
 
             serverQueue =
             queues.createQueue(
 
-
                 message.guild.id,
 
-
                 {
-
 
                     voiceChannel:
                     voice,
@@ -258,16 +240,21 @@ module.exports = {
                     connection,
 
 
-                    player,
-
-
                     volume:100
-
 
                 }
 
-
             );
+
+
+
+
+
+            connection.subscribe(
+                serverQueue.player
+            );
+
+
 
 
 
@@ -282,9 +269,13 @@ module.exports = {
 
 
 
+
+
         serverQueue.songs.push(
             song
         );
+
+
 
 
 
@@ -295,6 +286,7 @@ module.exports = {
             `🎵 Adicionado: **${song.title}**`
 
         );
+
 
 
 
@@ -317,6 +309,8 @@ module.exports = {
 
 
 
+
     }
+
 
 };

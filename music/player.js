@@ -53,12 +53,12 @@ async function playSong(guild, queue){
     try{
 
 
-        let input = "";
+        let input;
 
 
 
         // ==========================
-        // YOUTUBE
+        // YOUTUBE STREAM
         // ==========================
 
         if(
@@ -155,10 +155,8 @@ async function playSong(guild, queue){
 
                         }
 
-
                     }
                 );
-
 
 
                 yt.on(
@@ -174,7 +172,7 @@ async function playSong(guild, queue){
             if(!output){
 
                 throw new Error(
-                    "Stream do YouTube vazio"
+                    "Stream vazio do YouTube"
                 );
 
             }
@@ -184,12 +182,8 @@ async function playSong(guild, queue){
             input = output.trim();
 
 
+
         }else{
-
-
-            // ==========================
-            // LINK DIRETO
-            // ==========================
 
 
             input = song.url;
@@ -216,9 +210,6 @@ async function playSong(guild, queue){
                 input,
 
 
-                "-analyzeduration",
-                "0",
-
                 "-loglevel",
                 "error",
 
@@ -244,20 +235,6 @@ async function playSong(guild, queue){
 
 
         queue.ffmpegProcess = ff;
-
-
-
-        ff.stderr.on(
-            "data",
-            data=>{
-
-                console.log(
-                    "ffmpeg:",
-                    data.toString()
-                );
-
-            }
-        );
 
 
 
@@ -292,9 +269,38 @@ async function playSong(guild, queue){
 
 
 
+
+        // ==========================
+        // LIGA PLAYER NO DISCORD
+        // ==========================
+
+        if(queue.connection){
+
+            queue.connection.subscribe(
+                queue.player
+            );
+
+        }else{
+
+            console.log(
+                "❌ Sem conexão de voz"
+            );
+
+        }
+
+
+
+
+        console.log(
+            "▶️ Iniciando áudio..."
+        );
+
+
+
         queue.player.play(
             resource
         );
+
 
 
 
@@ -333,6 +339,7 @@ async function playSong(guild, queue){
 
 
 
+
         queue.player.on(
 
             "error",
@@ -344,7 +351,6 @@ async function playSong(guild, queue){
                     "❌ Player:",
                     error.message
                 );
-
 
 
                 queue.songs.shift();
@@ -362,6 +368,7 @@ async function playSong(guild, queue){
             }
 
         );
+
 
 
 
@@ -387,7 +394,6 @@ async function playSong(guild, queue){
 
 
     }
-
 
 
 }
