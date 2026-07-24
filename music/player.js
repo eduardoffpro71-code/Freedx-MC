@@ -211,20 +211,14 @@ const ff = spawn(
 
         "-vn",
 
-        "-c:a",
-        "libopus",
-
-        "-b:a",
-        "128k",
+        "-f",
+        "s16le",
 
         "-ar",
         "48000",
 
         "-ac",
         "2",
-
-        "-f",
-        "ogg",
 
         "pipe:1"
     ]
@@ -258,7 +252,7 @@ ff.stdout.on("error", (err) => {
 const resource = createAudioResource(
     ff.stdout,
     {
-        inputType: StreamType.OggOpus,
+        inputType: StreamType.Raw,
         inlineVolume: true
     }
 );
