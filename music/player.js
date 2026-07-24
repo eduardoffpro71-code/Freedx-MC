@@ -74,11 +74,12 @@ async function playSong(guild, queue) {
 
                 "--no-playlist",
 
-                "--extractor-args",
-                "youtube:player_client=web,android",
+                "--force-ipv4",
+
+                "--no-check-certificates",
 
                 "--extractor-args",
-                "youtube:formats=missing_pot",
+                "youtube:player_client=android",
 
                 "-o",
                 "-",
@@ -103,9 +104,10 @@ async function playSong(guild, queue) {
 
 
 
+
         yt.stderr.on(
             "data",
-            data => {
+            data=>{
 
                 const msg =
                 data.toString();
@@ -117,7 +119,7 @@ async function playSong(guild, queue) {
 
                     console.log(
                         "yt-dlp:",
-                        msg
+                        msg.trim()
                     );
 
                 }
@@ -128,20 +130,29 @@ async function playSong(guild, queue) {
 
 
 
+
         yt.on(
             "error",
-            error => {
+            error=>{
+
 
                 console.log(
-                    "❌ Erro yt-dlp:",
+                    "❌ yt-dlp erro:",
                     error.message
                 );
 
 
                 queue.playing = false;
 
+
+                if(queue.songs.length){
+                    queue.songs.shift();
+                }
+
+
             }
         );
+
 
 
 
@@ -161,7 +172,7 @@ async function playSong(guild, queue) {
                 "0",
 
                 "-loglevel",
-                "0",
+                "error",
 
                 "-f",
                 "s16le",
@@ -193,7 +204,8 @@ async function playSong(guild, queue) {
 
 
 
-        const resource =
+
+        const resource = 
         createAudioResource(
 
             ff.stdout,
@@ -213,6 +225,7 @@ async function playSong(guild, queue) {
 
 
         queue.resource = resource;
+
 
 
 
@@ -257,6 +270,7 @@ async function playSong(guild, queue) {
 
 
 
+
                 playSong(
                     guild,
                     queue
@@ -273,6 +287,7 @@ async function playSong(guild, queue) {
 
 
 
+
         queue.player.on(
 
             "error",
@@ -281,16 +296,16 @@ async function playSong(guild, queue) {
 
 
                 console.log(
-                    "❌ Erro player:",
+                    "❌ Player erro:",
                     error.message
                 );
 
 
 
-                queue.songs.shift();
-
-
                 queue.playing = false;
+
+
+                queue.songs.shift();
 
 
 

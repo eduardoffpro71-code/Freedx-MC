@@ -42,7 +42,7 @@ module.exports = {
         if(!query){
 
             return message.reply(
-                "🎵 Digite o nome da música ou link!"
+                "🎵 Envie um link ou nome da música!"
             );
 
         }
@@ -55,84 +55,106 @@ module.exports = {
 
 
 
-        let video;
+        let song;
 
 
 
-        try{
-
-
-            const search = await yts(query);
+        try {
 
 
 
-            if(!search || !search.videos.length){
+            // se for link usa direto
+            if(
+                query.startsWith("http")
+            ){
 
 
-                return loading.edit(
-                    "❌ Música não encontrada."
-                );
+                song = {
+
+                    title: query,
+
+                    url: query,
+
+                    requestedBy:
+                    message.author.username
+
+                };
+
+
+            } else {
+
+
+
+                const search =
+                await yts(query);
+
+
+
+                if(
+                    !search.videos.length
+                ){
+
+                    return loading.edit(
+                        "❌ Música não encontrada."
+                    );
+
+                }
+
+
+
+                const video =
+                search.videos[0];
+
+
+
+                song = {
+
+                    title:
+                    video.title,
+
+
+                    url:
+                    video.url,
+
+
+                    id:
+                    video.videoId,
+
+
+                    thumbnail:
+                    video.thumbnail,
+
+
+                    duration:
+                    video.timestamp,
+
+
+                    requestedBy:
+                    message.author.username
+
+                };
+
 
             }
 
 
 
-            video = search.videos[0];
 
-
-
-        }catch(error){
+        } catch(error){
 
 
             console.log(
-                "❌ Erro pesquisa:",
+                "❌ Erro busca:",
                 error.message
             );
 
 
             return loading.edit(
-                "❌ Erro ao procurar música."
+                "❌ Erro ao buscar música."
             );
 
+
         }
-
-
-
-
-
-
-
-
-        const song = {
-
-
-            title:
-            video.title,
-
-
-            url:
-            video.url,
-
-
-            id:
-            video.videoId,
-
-
-            thumbnail:
-            video.thumbnail,
-
-
-            duration:
-            video.timestamp,
-
-
-            requestedBy:
-            message.author.username
-
-
-        };
-
-
 
 
 
@@ -151,7 +173,6 @@ module.exports = {
 
 
 
-
         if(
             serverQueue &&
             serverQueue.voiceChannel &&
@@ -160,14 +181,10 @@ module.exports = {
 
 
             return loading.edit(
-                "❌ Já estou tocando em outro canal."
+                "❌ Estou em outro canal."
             );
 
-
         }
-
-
-
 
 
 
@@ -178,17 +195,14 @@ module.exports = {
         if(!serverQueue){
 
 
-
             const player =
             createAudioPlayer();
 
 
 
 
-
             const connection =
             joinVoiceChannel({
-
 
                 channelId:
                 voice.id,
@@ -204,9 +218,7 @@ module.exports = {
 
                 selfDeaf:true
 
-
             });
-
 
 
 
@@ -218,9 +230,6 @@ module.exports = {
 
 
 
-
-
-
             serverQueue =
             queues.createQueue(
 
@@ -228,20 +237,22 @@ module.exports = {
 
                 {
 
-                    voiceChannel: voice,
+                    voiceChannel:
+                    voice,
+
 
                     textChannel:
                     message.channel,
 
+
                     connection,
+
 
                     player
 
                 }
 
             );
-
-
 
 
 
@@ -256,15 +267,9 @@ module.exports = {
 
 
 
-
-
-
-
         serverQueue.songs.push(
             song
         );
-
-
 
 
 
@@ -275,9 +280,6 @@ module.exports = {
             `🎵 Adicionado: **${song.title}**`
 
         );
-
-
-
 
 
 
