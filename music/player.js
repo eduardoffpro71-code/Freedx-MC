@@ -58,7 +58,7 @@ async function playSong(guild, queue){
             song.url.includes("youtu.be")
         ){
 
-        const ytDlp = process.platform === "win32"
+ const ytDlp = process.platform === "win32"
     ? path.join(process.cwd(), "yt-dlp.exe")
     : path.join(process.cwd(), "yt-dlp");
 
@@ -81,7 +81,7 @@ const yt = spawn(
         "-g",
 
         "-f",
-        "bestaudio[ext=webm]/bestaudio/best",
+        "bestaudio/best",
 
         "--no-playlist",
 
@@ -91,9 +91,6 @@ const yt = spawn(
 
         "--cookies",
         cookies,
-
-        "--extractor-args",
-        "youtube:player_client=android",
 
         song.url
     ]
