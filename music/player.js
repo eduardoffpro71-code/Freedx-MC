@@ -195,35 +195,50 @@ const yt = spawn(
         // ==========================
 
 
-        const ff = spawn(
-            ffmpeg,
-            [
+ const ff = spawn(
+    ffmpeg,
+    [
+        "-reconnect",
+        "1",
 
-                "-i",
-                input,
+        "-reconnect_streamed",
+        "1",
 
-                "-loglevel",
-                "error",
+        "-reconnect_delay_max",
+        "5",
 
-                "-f",
-                "s16le",
+        "-i",
+        input,
 
-                "-ar",
-                "48000",
+        "-loglevel",
+        "error",
 
-                "-ac",
-                "2",
+        "-f",
+        "s16le",
 
-                "pipe:1"
+        "-ar",
+        "48000",
 
-            ]
+        "-ac",
+        "2",
+
+        "pipe:1"
+    ]
+);
+
+
+queue.ffmpegProcess = ff;
+
+
+ff.stderr.on(
+    "data",
+    data=>{
+        console.log(
+            "FFMPEG:",
+            data.toString()
         );
-
-
-        queue.ffmpegProcess = ff;
-
-
-
+    }
+);
         const resource = createAudioResource(
             ff.stdout,
             {
