@@ -13,15 +13,12 @@ const path = require("path");
 const ffmpeg = require("ffmpeg-static");
 
 
-
 async function playSong(guild, queue){
-
 
     if(!queue){
         console.log("❌ Queue não encontrada");
         return;
     }
-
 
 
     if(queue.songs.length === 0){
@@ -30,7 +27,6 @@ async function playSong(guild, queue){
         queue.current = null;
 
         return;
-
     }
 
 
@@ -42,7 +38,6 @@ async function playSong(guild, queue){
     queue.playing = true;
 
 
-
     console.log(
         "🎵 Tocando:",
         song.title
@@ -52,13 +47,12 @@ async function playSong(guild, queue){
 
     try{
 
-
         let input;
 
 
 
         // ==========================
-        // YOUTUBE STREAM
+        // YOUTUBE
         // ==========================
 
         if(
@@ -66,24 +60,22 @@ async function playSong(guild, queue){
             song.url.includes("youtu.be")
         ){
 
-
             const ytDlp = path.join(
                 process.cwd(),
                 "yt-dlp"
             );
 
 
-
             const yt = spawn(
-
                 ytDlp,
-
                 [
 
                     "-g",
 
                     "-f",
-                    "bestaudio[ext=webm]/bestaudio/best",
+                    "bestaudio",
+
+                    "--force-ipv4",
 
                     "--no-playlist",
 
@@ -95,13 +87,10 @@ async function playSong(guild, queue){
                     song.url
 
                 ]
-
             );
 
 
-
             queue.ytProcess = yt;
-
 
 
             let output = "";
@@ -121,7 +110,6 @@ async function playSong(guild, queue){
                 );
 
 
-
                 yt.stderr.on(
                     "data",
                     data=>{
@@ -133,7 +121,6 @@ async function playSong(guild, queue){
 
                     }
                 );
-
 
 
                 yt.on(
@@ -169,14 +156,13 @@ async function playSong(guild, queue){
 
 
 
-            if(!output){
+            if(!output.trim()){
 
                 throw new Error(
-                    "Stream vazio do YouTube"
+                    "URL de áudio vazia"
                 );
 
             }
-
 
 
             input = output.trim();
@@ -185,9 +171,7 @@ async function playSong(guild, queue){
 
         }else{
 
-
             input = song.url;
-
 
         }
 
@@ -200,48 +184,51 @@ async function playSong(guild, queue){
 
 
         const ff = spawn(
-
             ffmpeg,
-
             [
 
                 "-i",
-
                 input,
-
 
                 "-loglevel",
                 "error",
 
-
                 "-f",
                 "s16le",
-
 
                 "-ar",
                 "48000",
 
-
                 "-ac",
                 "2",
-
 
                 "pipe:1"
 
             ]
-
         );
-
 
 
         queue.ffmpegProcess = ff;
 
 
 
+        ff.stderr.on(
+            "data",
+            data=>{
+
+                console.log(
+                    "ffmpeg:",
+                    data.toString()
+                );
+
+            }
+        );
+
+
+
+
         const resource = createAudioResource(
-
             ff.stdout,
-
             {
 
                 inputType:
@@ -250,7 +237,6 @@ async function playSong(guild, queue){
                 inlineVolume:true
 
             }
-
         );
 
 
@@ -270,10 +256,6 @@ async function playSong(guild, queue){
 
 
 
-        // ==========================
-        // LIGA PLAYER NO DISCORD
-        // ==========================
-
         if(queue.connection){
 
             queue.connection.subscribe(
@@ -282,8 +264,8 @@ async function playSong(guild, queue){
 
         }else{
 
-            console.log(
-                "❌ Sem conexão de voz"
+            throw new Error(
+                "Sem conexão de voz"
             );
 
         }
@@ -291,25 +273,30 @@ async function playSong(guild, queue){
 
 
 
-        console.log(
-            "▶️ Iniciando áudio..."
+        // ==========================
+        // EVENTOS
+        // ==========================
+
+
+        queue.player.removeAllListeners(
+            AudioPlayerStatus.Idle
         );
 
 
-
-        queue.player.play(
-            resource
+        queue.player.removeAllListeners(
+            "error"
         );
-
-
 
 
 
         queue.player.once(
-
             AudioPlayerStatus.Idle,
-
             ()=>{
+
+
+                console.log(
+                    "⏹️ Música finalizada"
+                );
 
 
                 queue.songs.shift();
@@ -320,12 +307,6 @@ async function playSong(guild, queue){
                 queue.playing = false;
 
 
-                queue.ytProcess = null;
-
-                queue.ffmpegProcess = null;
-
-
-
                 playSong(
                     guild,
                     queue
@@ -333,17 +314,13 @@ async function playSong(guild, queue){
 
 
             }
-
         );
 
 
 
 
-
-        queue.player.on(
-
+        queue.player.once(
             "error",
-
             error=>{
 
 
@@ -355,8 +332,10 @@ async function playSong(guild, queue){
 
                 queue.songs.shift();
 
-                queue.playing = false;
 
+                queue.current = null;
+
+                queue.playing = false;
 
 
                 playSong(
@@ -366,9 +345,19 @@ async function playSong(guild, queue){
 
 
             }
-
         );
 
+
+
+
+        console.log(
+            "▶️ Iniciando áudio..."
+        );
+
+
+        queue.player.play(
+            resource
+        );
 
 
 
@@ -381,9 +370,7 @@ async function playSong(guild, queue){
         );
 
 
-
         queue.playing = false;
-
 
 
         if(queue.songs.length){
@@ -392,16 +379,12 @@ async function playSong(guild, queue){
 
         }
 
-
     }
-
 
 }
 
 
 
 module.exports = {
-
     playSong
-
 };
