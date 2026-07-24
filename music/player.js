@@ -74,16 +74,28 @@ console.log(
     fs.existsSync(cookies)
 );
 
-console.log("🚀 PLAYER NOVO SEM -f");
+console.log("🚀 PLAYER COM JS RUNTIME");
 
 
 const yt = spawn(
     ytDlp,
     [
-        "--list-formats",
+        "-g",
+
+        "--no-playlist",
+
+        "--no-warnings",
+
+        "--force-ipv4",
+
+        "--js-runtimes",
+        "node",
 
         "--cookies",
         cookies,
+
+        "-f",
+        "ba/b",
 
         song.url
     ]
