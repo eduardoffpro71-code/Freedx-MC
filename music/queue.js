@@ -1,16 +1,18 @@
 const queues = new Map();
 
 
-
-
 function createQueue(guildId, data = {}) {
+
+    // evita criar outra fila no mesmo servidor
+    if (queues.has(guildId)) {
+        return queues.get(guildId);
+    }
 
 
     const queue = {
 
-
         // ID do servidor
-        guildId: guildId,
+        guildId,
 
 
         // músicas
@@ -26,11 +28,9 @@ function createQueue(guildId, data = {}) {
         textChannel: null,
 
 
-
         // conexão e player
         connection: null,
         player: null,
-
 
 
         // configurações
@@ -38,10 +38,8 @@ function createQueue(guildId, data = {}) {
         loop: false,
 
 
-
         // painel
         panelMessage: null,
-
 
 
         // tempo da música
@@ -49,16 +47,13 @@ function createQueue(guildId, data = {}) {
         duration: 0,
 
 
-
         // controles
         paused: false,
         playing: false,
 
 
-
         // recurso áudio
         resource: null,
-
 
 
         // processos
@@ -66,13 +61,9 @@ function createQueue(guildId, data = {}) {
         ffmpegProcess: null,
 
 
-
         ...data
 
     };
-
-
-
 
 
     queues.set(
@@ -81,130 +72,109 @@ function createQueue(guildId, data = {}) {
     );
 
 
-
     return queue;
 
 }
 
 
 
-
-
-
-
 function getQueue(guildId){
-
 
     return queues.get(
         guildId
     );
 
-
 }
-
-
-
-
 
 
 
 function get(guildId){
 
-
     return queues.get(
         guildId
     );
-
 
 }
 
 
 
-
-
-
-
 function deleteQueue(guildId){
 
-
-
-    const queue =
-    queues.get(
+    const queue = queues.get(
         guildId
     );
 
 
-
     if(queue){
 
+        try {
 
-        try{
-
-
-            if(queue.connection){
-
-                queue.connection.destroy();
-
+            if(queue.ytProcess){
+                queue.ytProcess.kill();
             }
 
+        } catch {}
 
-        }catch{}
+
+        try {
+
+            if(queue.ffmpegProcess){
+                queue.ffmpegProcess.kill();
+            }
+
+        } catch {}
 
 
+        try {
+
+            if(queue.player){
+                queue.player.stop();
+            }
+
+        } catch {}
+
+
+        try {
+
+            if(queue.connection){
+                queue.connection.destroy();
+            }
+
+        } catch {}
 
     }
-
-
 
 
     queues.delete(
         guildId
     );
 
-
 }
-
-
-
-
 
 
 
 function hasQueue(guildId){
 
-
     return queues.has(
         guildId
     );
-
 
 }
 
 
 
-
-
-
-
 module.exports = {
-
 
     queues,
 
-
     createQueue,
-
 
     getQueue,
 
-
     get,
-
 
     deleteQueue,
 
-
     hasQueue
-
 
 };
