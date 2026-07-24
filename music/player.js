@@ -167,18 +167,18 @@ const yt = spawn(
 
 
 
-            if(!output.trim()){
+ if(!output.trim()){
 
-                throw new Error(
-                    "Stream vazio"
-                );
+    throw new Error(
+        "Stream vazio"
+    );
 
-            }
+}
 
+input = output.trim();
 
-            input = output.trim();
-
-
+console.log("🌐 URL do stream:");
+console.log(input);
         }else{
 
 
