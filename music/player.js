@@ -25,7 +25,6 @@ async function playSong(guild, queue){
     }
 
 
-
     if(queue.songs.length === 0){
 
         queue.playing = false;
@@ -60,14 +59,13 @@ async function playSong(guild, queue){
 
 
         /*
-        ==========================
-        YOUTUBE / YT-DLP
-        ==========================
+        =====================
+        YOUTUBE
+        =====================
         */
 
 
         if(
-            song.source === "youtube" ||
             song.url.includes("youtube.com") ||
             song.url.includes("youtu.be")
         ){
@@ -88,13 +86,22 @@ async function playSong(guild, queue){
                 [
 
                     "-f",
-                    "bestaudio/best",
+                    "bestaudio",
 
                     "--no-playlist",
 
+                    "--no-warnings",
+
+                    "--quiet",
+
+                    "--extractor-args",
+                    "youtube:player_client=android",
+
+                    "-N",
+                    "4",
+
                     "-o",
                     "-",
-
 
                     song.url
 
@@ -115,11 +122,9 @@ async function playSong(guild, queue){
             queue.ytProcess = yt;
 
 
-
             yt.stderr.on(
                 "data",
                 data=>{
-
 
                     const msg =
                     data.toString();
@@ -136,7 +141,6 @@ async function playSong(guild, queue){
 
                     }
 
-
                 }
             );
 
@@ -145,19 +149,14 @@ async function playSong(guild, queue){
             input = yt.stdout;
 
 
-
-        }
-
+        }else{
 
 
-        /*
-        ==========================
-        LINK DIRETO
-        ==========================
-        */
-
-
-        else{
+            /*
+            =====================
+            LINK DIRETO
+            =====================
+            */
 
 
             input = song.url;
@@ -168,6 +167,16 @@ async function playSong(guild, queue){
 
 
 
+
+        let audioStream;
+
+
+
+        /*
+        =====================
+        FFMPEG
+        =====================
+        */
 
 
         const ff =
@@ -214,25 +223,35 @@ async function playSong(guild, queue){
 
             const direct =
             spawn(
+
                 ffmpeg,
+
                 [
+
                     "-i",
                     input,
+
                     "-f",
                     "s16le",
+
                     "-ar",
                     "48000",
+
                     "-ac",
                     "2",
+
                     "pipe:1"
+
                 ]
+
             );
 
 
-            queue.ffmpegProcess = direct;
+            queue.ffmpegProcess =
+            direct;
 
 
-            input =
+            audioStream =
             direct.stdout;
 
 
@@ -244,7 +263,14 @@ async function playSong(guild, queue){
                 ff.stdin
             );
 
+
+            audioStream =
+            ff.stdout;
+
         }
+
+
+
 
 
 
@@ -252,7 +278,7 @@ async function playSong(guild, queue){
         const resource =
         createAudioResource(
 
-            ff.stdout,
+            audioStream,
 
             {
 
@@ -264,6 +290,7 @@ async function playSong(guild, queue){
             }
 
         );
+
 
 
 
@@ -286,6 +313,7 @@ async function playSong(guild, queue){
         queue.player.play(
             resource
         );
+
 
 
 
@@ -330,6 +358,7 @@ async function playSong(guild, queue){
 
 
 
+
         queue.player.on(
 
             "error",
@@ -359,7 +388,6 @@ async function playSong(guild, queue){
             }
 
         );
-
 
 
 
