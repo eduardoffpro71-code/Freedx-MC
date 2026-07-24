@@ -75,10 +75,10 @@ async function playSong(guild, queue) {
                 "--no-playlist",
 
                 "--extractor-args",
-                "youtube:player_client=android",
+                "youtube:player_client=web,android",
 
                 "--extractor-args",
-                "youtube:player_skip=webpage",
+                "youtube:formats=missing_pot",
 
                 "-o",
                 "-",
@@ -103,10 +103,9 @@ async function playSong(guild, queue) {
 
 
 
-
         yt.stderr.on(
             "data",
-            data=>{
+            data => {
 
                 const msg =
                 data.toString();
@@ -129,11 +128,9 @@ async function playSong(guild, queue) {
 
 
 
-
         yt.on(
             "error",
-            error=>{
-
+            error => {
 
                 console.log(
                     "❌ Erro yt-dlp:",
@@ -142,7 +139,6 @@ async function playSong(guild, queue) {
 
 
                 queue.playing = false;
-
 
             }
         );
@@ -231,11 +227,9 @@ async function playSong(guild, queue) {
 
 
 
-
         queue.player.play(
             resource
         );
-
 
 
 
@@ -314,7 +308,6 @@ async function playSong(guild, queue) {
 
 
 
-
     } catch(error){
 
 
@@ -331,6 +324,7 @@ async function playSong(guild, queue) {
 
 
 }
+
 
 
 
