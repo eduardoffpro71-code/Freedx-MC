@@ -9,11 +9,14 @@ const {
 } = require("@discordjs/voice");
 
 
-const play = require("play-dl");
+const yts = require("yt-search");
 
 
 const queues = require("../music/queue");
-const { playSong } = require("../music/player");
+
+const {
+    playSong
+} = require("../music/player");
 
 
 
@@ -37,18 +40,11 @@ module.exports = {
 
 
 
-        // evita responder o mesmo modal duas vezes
         if(
             interaction.replied ||
             interaction.deferred
         ){
-
-            console.log(
-                "⚠️ Modal já respondido"
-            );
-
             return;
-
         }
 
 
@@ -59,6 +55,7 @@ module.exports = {
             await interaction.deferReply({
                 flags: MessageFlags.Ephemeral
             });
+
 
 
 
@@ -84,16 +81,16 @@ module.exports = {
 
 
 
-            const result =
-            await play.search(query,{
-                limit:1
-            });
+
+            const search =
+            await yts(query);
 
 
 
             if(
-                !result ||
-                result.length === 0
+                !search ||
+                !search.videos ||
+                search.videos.length === 0
             ){
 
                 return interaction.editReply(
@@ -104,23 +101,46 @@ module.exports = {
 
 
 
+
+            const video =
+            search.videos[0];
+
+
+
+
+
             const song = {
 
-                title: result[0].title,
+
+                title:
+                video.title,
+
 
                 url:
-                `https://www.youtube.com/watch?v=${result[0].id}`,
+                video.url,
+
+
+                id:
+                video.videoId,
+
 
                 thumbnail:
-                result[0].thumbnails?.[0]?.url || null,
+                video.thumbnail || null,
+
 
                 duration:
-                result[0].durationRaw || "0:00",
+                video.timestamp || "0:00",
+
 
                 requestedBy:
                 interaction.user.username
 
+
             };
+
+
+
+
 
 
 
@@ -128,6 +148,10 @@ module.exports = {
             queues.getQueue(
                 interaction.guild.id
             );
+
+
+
+
 
 
 
@@ -139,7 +163,7 @@ module.exports = {
                 ){
 
                     return interaction.editReply(
-                        "❌ Estou tocando em outro canal de voz."
+                        "❌ Estou tocando em outro canal."
                     );
 
                 }
@@ -148,7 +172,12 @@ module.exports = {
 
 
 
+
+
+
+
             if(!serverQueue){
+
 
 
                 const player =
@@ -156,24 +185,38 @@ module.exports = {
 
 
 
+
                 const connection =
                 joinVoiceChannel({
 
-                    channelId: voice.id,
+
+                    channelId:
+                    voice.id,
+
 
                     guildId:
                     interaction.guild.id,
 
+
                     adapterCreator:
                     interaction.guild.voiceAdapterCreator,
 
+
                     selfDeaf:true
+
 
                 });
 
 
 
-                connection.subscribe(player);
+
+                connection.subscribe(
+                    player
+                );
+
+
+
+
 
 
 
@@ -184,36 +227,21 @@ module.exports = {
 
                     {
 
-                        guildId:
-                        interaction.guild.id,
-
-                        voiceChannel:
-                        voice,
+                        voiceChannel: voice,
 
                         textChannel:
                         interaction.channel,
 
                         connection,
 
-                        player,
-
-                        songs:[],
-
-                        volume:50,
-
-                        loop:false,
-
-                        playing:false,
-
-                        current:null,
-
-                        startedAt:null,
-
-                        duration:0
+                        player
 
                     }
 
                 );
+
+
+
 
 
                 console.log(
@@ -226,16 +254,30 @@ module.exports = {
 
 
 
-            serverQueue.songs.push(song);
 
 
 
-            if(!serverQueue.current){
+
+            serverQueue.songs.push(
+                song
+            );
+
+
+
+
+
+
+
+
+            if(!serverQueue.playing){
 
 
                 await playSong(
+
                     interaction.guild,
-                    song
+
+                    serverQueue
+
                 );
 
 
@@ -243,9 +285,17 @@ module.exports = {
 
 
 
+
+
+
+
             return interaction.editReply(
+
                 `🎵 Adicionado: **${song.title}**`
+
             );
+
+
 
 
 
