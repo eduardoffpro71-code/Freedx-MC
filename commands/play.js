@@ -14,7 +14,6 @@ const {
 
 
 
-
 module.exports = {
 
     name: "play",
@@ -43,7 +42,7 @@ module.exports = {
         if(!query){
 
             return message.reply(
-                "🎵 Envie um link ou nome da música!"
+                "🎵 Envie nome da música ou link!"
             );
 
         }
@@ -64,7 +63,9 @@ module.exports = {
 
 
             // LINK DIRETO
-            if(query.startsWith("http")){
+            if(
+                query.startsWith("http")
+            ){
 
 
                 song = {
@@ -74,6 +75,9 @@ module.exports = {
 
                     url:
                     query,
+
+                    source:
+                    "direct",
 
                     requestedBy:
                     message.author.username
@@ -131,6 +135,10 @@ module.exports = {
                     video.timestamp,
 
 
+                    source:
+                    "youtube",
+
+
                     requestedBy:
                     message.author.username
 
@@ -162,7 +170,6 @@ module.exports = {
 
 
 
-
         let serverQueue =
         queues.getQueue(
             message.guild.id
@@ -178,13 +185,13 @@ module.exports = {
             serverQueue.voiceChannel.id !== voice.id
         ){
 
+
             return loading.edit(
-                "❌ Já estou tocando em outro canal."
+                "❌ Estou tocando em outro canal."
             );
 
+
         }
-
-
 
 
 
@@ -193,16 +200,15 @@ module.exports = {
         if(!serverQueue){
 
 
-
             const player =
             createAudioPlayer();
 
 
 
 
-
             const connection =
             joinVoiceChannel({
+
 
                 channelId:
                 voice.id,
@@ -218,9 +224,8 @@ module.exports = {
 
                 selfDeaf:true
 
+
             });
-
-
 
 
 
@@ -232,13 +237,15 @@ module.exports = {
 
 
 
-
             serverQueue =
             queues.createQueue(
 
+
                 message.guild.id,
 
+
                 {
+
 
                     voiceChannel:
                     voice,
@@ -256,11 +263,11 @@ module.exports = {
 
                     volume:100
 
+
                 }
 
+
             );
-
-
 
 
 
@@ -275,13 +282,9 @@ module.exports = {
 
 
 
-
-
         serverQueue.songs.push(
             song
         );
-
-
 
 
 
@@ -292,7 +295,6 @@ module.exports = {
             `🎵 Adicionado: **${song.title}**`
 
         );
-
 
 
 

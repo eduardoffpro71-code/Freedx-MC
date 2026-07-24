@@ -16,9 +16,7 @@ const ffmpeg = require("ffmpeg-static");
 
 
 
-
-
-async function playSong(guild, queue) {
+async function playSong(guild, queue){
 
 
     if(!queue){
@@ -39,13 +37,11 @@ async function playSong(guild, queue) {
 
 
 
-
     const song = queue.songs[0];
 
 
     queue.current = song;
     queue.playing = true;
-
 
 
 
@@ -56,123 +52,126 @@ async function playSong(guild, queue) {
 
 
 
+    try{
 
 
-    try {
-
-
-
-        const ytDlp = path.join(
-            process.cwd(),
-            "yt-dlp"
-        );
+        let input;
 
 
 
+        /*
+        ==========================
+        YOUTUBE / YT-DLP
+        ==========================
+        */
 
 
-        const yt = spawn(
+        if(
+            song.source === "youtube" ||
+            song.url.includes("youtube.com") ||
+            song.url.includes("youtu.be")
+        ){
 
-            ytDlp,
 
-            [
-
-                "-f",
-                "bestaudio/best",
-
-                "--no-playlist",
-
-                "--force-ipv4",
-
-                "--extractor-args",
-                "youtube:player_client=android,web",
-
-                "--extractor-args",
-                "youtube:skip=dash",
-
-                "-o",
-                "-",
-
-                song.url
-
-            ],
-
-            {
-                stdio:[
-                    "ignore",
-                    "pipe",
-                    "pipe"
-                ]
-            }
-
-        );
+            const ytDlp =
+            path.join(
+                process.cwd(),
+                "yt-dlp"
+            );
 
 
 
+            const yt = spawn(
 
-        queue.ytProcess = yt;
+                ytDlp,
+
+                [
+
+                    "-f",
+                    "bestaudio/best",
+
+                    "--no-playlist",
+
+                    "-o",
+                    "-",
 
 
+                    song.url
 
+                ],
 
-
-        yt.stderr.on(
-            "data",
-            data=>{
-
-
-                const msg =
-                data.toString();
-
-
-                if(
-                    !msg.includes("WARNING")
-                ){
-
-                    console.log(
-                        "yt-dlp:",
-                        msg.trim()
-                    );
-
+                {
+                    stdio:[
+                        "ignore",
+                        "pipe",
+                        "pipe"
+                    ]
                 }
 
-
-            }
-        );
+            );
 
 
 
+            queue.ytProcess = yt;
+
+
+
+            yt.stderr.on(
+                "data",
+                data=>{
+
+
+                    const msg =
+                    data.toString();
+
+
+                    if(
+                        !msg.includes("WARNING")
+                    ){
+
+                        console.log(
+                            "yt-dlp:",
+                            msg.trim()
+                        );
+
+                    }
+
+
+                }
+            );
+
+
+
+            input = yt.stdout;
+
+
+
+        }
+
+
+
+        /*
+        ==========================
+        LINK DIRETO
+        ==========================
+        */
+
+
+        else{
+
+
+            input = song.url;
+
+
+        }
 
 
 
 
-        yt.on(
-            "error",
-            error=>{
 
 
-                console.log(
-                    "❌ yt-dlp:",
-                    error.message
-                );
-
-
-                nextSong(
-                    guild,
-                    queue
-                );
-
-
-            }
-        );
-
-
-
-
-
-
-
-        const ff = spawn(
+        const ff =
+        spawn(
 
             ffmpeg,
 
@@ -204,20 +203,48 @@ async function playSong(guild, queue) {
 
 
 
-
-
         queue.ffmpegProcess = ff;
 
 
 
 
+        if(
+            typeof input === "string"
+        ){
 
-        yt.stdout.pipe(
-            ff.stdin
-        );
+            const direct =
+            spawn(
+                ffmpeg,
+                [
+                    "-i",
+                    input,
+                    "-f",
+                    "s16le",
+                    "-ar",
+                    "48000",
+                    "-ac",
+                    "2",
+                    "pipe:1"
+                ]
+            );
 
 
+            queue.ffmpegProcess = direct;
 
+
+            input =
+            direct.stdout;
+
+
+        }
+        else{
+
+
+            input.pipe(
+                ff.stdin
+            );
+
+        }
 
 
 
@@ -240,11 +267,8 @@ async function playSong(guild, queue) {
 
 
 
-
-
-        queue.resource = resource;
-
-
+        queue.resource =
+        resource;
 
 
 
@@ -259,13 +283,9 @@ async function playSong(guild, queue) {
 
 
 
-
-
-
         queue.player.play(
             resource
         );
-
 
 
 
@@ -279,7 +299,23 @@ async function playSong(guild, queue) {
             ()=>{
 
 
-                nextSong(
+                queue.songs.shift();
+
+
+                queue.current = null;
+
+
+                queue.playing = false;
+
+
+                queue.ytProcess = null;
+
+
+                queue.ffmpegProcess = null;
+
+
+
+                playSong(
                     guild,
                     queue
                 );
@@ -294,7 +330,7 @@ async function playSong(guild, queue) {
 
 
 
-        queue.player.once(
+        queue.player.on(
 
             "error",
 
@@ -307,7 +343,14 @@ async function playSong(guild, queue) {
                 );
 
 
-                nextSong(
+                queue.songs.shift();
+
+
+                queue.playing = false;
+
+
+
+                playSong(
                     guild,
                     queue
                 );
@@ -321,74 +364,23 @@ async function playSong(guild, queue) {
 
 
 
+
     }catch(error){
 
 
         console.log(
-            "❌ Erro:",
+            "❌ Erro player:",
             error.message
         );
 
 
-        nextSong(
-            guild,
-            queue
-        );
+        queue.playing = false;
 
 
     }
 
 
 }
-
-
-
-
-
-function nextSong(guild, queue){
-
-
-    if(queue.ytProcess){
-
-        queue.ytProcess.kill();
-
-    }
-
-
-    if(queue.ffmpegProcess){
-
-        queue.ffmpegProcess.kill();
-
-    }
-
-
-
-
-    queue.songs.shift();
-
-
-    queue.current = null;
-
-    queue.playing = false;
-
-
-    queue.ytProcess = null;
-
-    queue.ffmpegProcess = null;
-
-
-
-
-
-    playSong(
-        guild,
-        queue
-    );
-
-
-}
-
-
 
 
 
