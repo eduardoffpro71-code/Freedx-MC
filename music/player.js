@@ -88,6 +88,8 @@ const yt = spawn(
 
         "--force-ipv4",
 
+        "--no-check-certificates",
+
         "--js-runtimes",
         "node",
 
@@ -95,12 +97,11 @@ const yt = spawn(
         cookies,
 
         "-f",
-        "ba/b",
+        "bestaudio/best",
 
         song.url
     ]
 );
-
 
             queue.ytProcess = yt;
 
@@ -193,8 +194,6 @@ console.log(input);
 // FFMPEG
 // ==========================
 
-console.log("FFMPEG PATH:", ffmpeg);
-
 const ff = spawn(
     ffmpeg,
     [
@@ -210,17 +209,22 @@ const ff = spawn(
         "-i",
         input,
 
-        "-loglevel",
-        "debug",
+        "-vn",
 
-        "-f",
-        "s16le",
+        "-c:a",
+        "libopus",
+
+        "-b:a",
+        "128k",
 
         "-ar",
         "48000",
 
         "-ac",
         "2",
+
+        "-f",
+        "ogg",
 
         "pipe:1"
     ]
@@ -236,7 +240,12 @@ ff.on("error", (err) => {
 ff.on("close", (code) => {
     console.log("FFMPEG FECHOU:", code);
 });
-
+ff.stderr.on("data", data => {
+    console.log(
+        "FFMPEG:",
+        data.toString()
+    );
+});
 ff.stdout.on("end", () => {
     console.log("FFMPEG stdout terminou");
 });
@@ -245,17 +254,14 @@ ff.stdout.on("error", (err) => {
     console.log("FFMPEG stdout erro:", err.message);
 });
 
-ff.stderr.on("data", (data) => {
-    console.log("FFMPEG:", data.toString());
-});
 
 const resource = createAudioResource(
     ff.stdout,
     {
+        inputType: StreamType.OggOpus,
         inlineVolume: true
     }
 );
-
 queue.resource = resource;
 
 
@@ -278,84 +284,76 @@ queue.resource = resource;
 
         }
 
-
-        queue.connection.subscribe(
-            queue.player
-        );
-
-
-
-        queue.player.removeAllListeners(
-            AudioPlayerStatus.Idle
-        );
+  
+queue.connection.subscribe(
+    queue.player
+);
 
 
-        queue.player.removeAllListeners(
-            "error"
-        );
+queue.player.removeAllListeners(
+    AudioPlayerStatus.Idle
+);
 
 
-
-        queue.player.once(
-            AudioPlayerStatus.Idle,
-            ()=>{
-
-                console.log(
-                    "⏹️ Música finalizada"
-                );
-
-
-                queue.songs.shift();
-
-                queue.current = null;
-                queue.playing = false;
-
-
-                playSong(
-                    guild,
-                    queue
-                );
-
-            }
-        );
-
-
-
-        queue.player.once(
-            "error",
-            error=>{
-
-                console.log(
-                    "❌ Player:",
-                    error.message
-                );
-
-
-                queue.songs.shift();
-
-                queue.current = null;
-                queue.playing = false;
-
-
-                playSong(
-                    guild,
-                    queue
-                );
-
-            }
-        );
-
-
+queue.player.removeAllListeners(
+    "error"
+);
+queue.player.once(
+    AudioPlayerStatus.Idle,
+    ()=>{
 
         console.log(
-            "▶️ Iniciando áudio..."
+            "⏹️ Música finalizada"
+        );
+
+        queue.songs.shift();
+
+        queue.current = null;
+        queue.playing = false;
+
+
+        playSong(
+            guild,
+            queue
+        );
+
+    }
+);
+
+queue.player.once(
+    "error",
+    error=>{
+
+        console.log(
+            "❌ Player:",
+            error.message
         );
 
 
-        queue.player.play(
-            resource
+        queue.songs.shift();
+
+        queue.current = null;
+        queue.playing = false;
+
+
+        playSong(
+            guild,
+            queue
         );
 
+    }
+);
+
+
+
+console.log(
+    "▶️ Iniciando áudio..."
+);
+
+
+queue.player.play(
+    resource
+);
 
 
     }catch(error){
