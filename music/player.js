@@ -4,11 +4,9 @@ const {
     AudioPlayerStatus
 } = require("@discordjs/voice");
 
-
 const {
     spawn
 } = require("child_process");
-
 
 const path = require("path");
 
@@ -58,12 +56,9 @@ async function playSong(guild, queue){
 
 
 
-        /*
-        =====================
-        YOUTUBE
-        =====================
-        */
-
+        // =====================
+        // YOUTUBE STREAM
+        // =====================
 
         if(
             song.url.includes("youtube.com") ||
@@ -85,23 +80,17 @@ async function playSong(guild, queue){
 
                 [
 
+                    "-g",
+
                     "-f",
-                    "bestaudio",
+                    "bestaudio/best",
 
                     "--no-playlist",
 
                     "--no-warnings",
 
-                    "--quiet",
-
                     "--extractor-args",
                     "youtube:player_client=android",
-
-                    "-N",
-                    "4",
-
-                    "-o",
-                    "-",
 
                     song.url
 
@@ -122,41 +111,52 @@ async function playSong(guild, queue){
             queue.ytProcess = yt;
 
 
-            yt.stderr.on(
+
+            let url = "";
+
+
+
+            yt.stdout.on(
                 "data",
                 data=>{
 
-                    const msg =
-                    data.toString();
-
-
-                    if(
-                        !msg.includes("WARNING")
-                    ){
-
-                        console.log(
-                            "yt-dlp:",
-                            msg.trim()
-                        );
-
-                    }
+                    url += data.toString();
 
                 }
             );
 
 
 
-            input = yt.stdout;
+            await new Promise(resolve=>{
+
+                yt.stdout.on(
+                    "end",
+                    resolve
+                );
+
+            });
+
+
+
+            if(!url){
+
+                throw new Error(
+                    "Não conseguiu pegar stream do YouTube"
+                );
+
+            }
+
+
+
+            input = url.trim();
 
 
         }else{
 
 
-            /*
-            =====================
-            LINK DIRETO
-            =====================
-            */
+            // =====================
+            // LINK DIRETO
+            // =====================
 
 
             input = song.url;
@@ -168,26 +168,16 @@ async function playSong(guild, queue){
 
 
 
-        let audioStream;
-
-
-
-        /*
-        =====================
-        FFMPEG
-        =====================
-        */
-
-
-        const ff =
-        spawn(
+        const ff = spawn(
 
             ffmpeg,
 
             [
 
                 "-i",
-                "pipe:0",
+
+                input,
+
 
                 "-analyzeduration",
                 "0",
@@ -195,14 +185,18 @@ async function playSong(guild, queue){
                 "-loglevel",
                 "error",
 
+
                 "-f",
                 "s16le",
+
 
                 "-ar",
                 "48000",
 
+
                 "-ac",
                 "2",
+
 
                 "pipe:1"
 
@@ -216,69 +210,11 @@ async function playSong(guild, queue){
 
 
 
-
-        if(
-            typeof input === "string"
-        ){
-
-            const direct =
-            spawn(
-
-                ffmpeg,
-
-                [
-
-                    "-i",
-                    input,
-
-                    "-f",
-                    "s16le",
-
-                    "-ar",
-                    "48000",
-
-                    "-ac",
-                    "2",
-
-                    "pipe:1"
-
-                ]
-
-            );
-
-
-            queue.ffmpegProcess =
-            direct;
-
-
-            audioStream =
-            direct.stdout;
-
-
-        }
-        else{
-
-
-            input.pipe(
-                ff.stdin
-            );
-
-
-            audioStream =
-            ff.stdout;
-
-        }
-
-
-
-
-
-
-
         const resource =
+
         createAudioResource(
 
-            audioStream,
+            ff.stdout,
 
             {
 
@@ -293,9 +229,7 @@ async function playSong(guild, queue){
 
 
 
-
-        queue.resource =
-        resource;
+        queue.resource = resource;
 
 
 
@@ -309,12 +243,9 @@ async function playSong(guild, queue){
 
 
 
-
         queue.player.play(
             resource
         );
-
-
 
 
 
@@ -332,12 +263,10 @@ async function playSong(guild, queue){
 
                 queue.current = null;
 
-
                 queue.playing = false;
 
 
                 queue.ytProcess = null;
-
 
                 queue.ffmpegProcess = null;
 
@@ -352,8 +281,6 @@ async function playSong(guild, queue){
             }
 
         );
-
-
 
 
 
@@ -374,7 +301,6 @@ async function playSong(guild, queue){
 
                 queue.songs.shift();
 
-
                 queue.playing = false;
 
 
@@ -392,7 +318,6 @@ async function playSong(guild, queue){
 
 
 
-
     }catch(error){
 
 
@@ -403,6 +328,9 @@ async function playSong(guild, queue){
 
 
         queue.playing = false;
+
+
+        queue.songs.shift();
 
 
     }
