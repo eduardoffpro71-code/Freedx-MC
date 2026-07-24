@@ -5,7 +5,12 @@ const {
 } = require("@discordjs/voice");
 
 
-const { spawn } = require("child_process");
+const {
+    spawn
+} = require("child_process");
+
+
+const path = require("path");
 
 const ffmpeg = require("ffmpeg-static");
 
@@ -52,8 +57,11 @@ async function playSong(guild, queue) {
     try {
 
 
-        // Railway usa Linux, então usa yt-dlp instalado no sistema
-        const ytDlp = "yt-dlp";
+        // pega o yt-dlp baixado pelo install-yt-dlp.js
+        const ytDlp = path.join(
+            process.cwd(),
+            "yt-dlp"
+        );
 
 
 
@@ -94,6 +102,7 @@ async function playSong(guild, queue) {
                 const msg =
                 data.toString();
 
+
                 if(
                     !msg.includes("WARNING")
                 ){
@@ -107,8 +116,6 @@ async function playSong(guild, queue) {
 
             }
         );
-
-
 
 
 
@@ -158,8 +165,6 @@ async function playSong(guild, queue) {
 
 
 
-
-
         const resource =
         createAudioResource(
 
@@ -178,8 +183,6 @@ async function playSong(guild, queue) {
 
 
 
-
-
         queue.resource = resource;
 
 
@@ -187,7 +190,6 @@ async function playSong(guild, queue) {
         resource.volume.setVolume(
             queue.volume / 100
         );
-
 
 
 
@@ -200,20 +202,17 @@ async function playSong(guild, queue) {
 
 
 
-
-
         queue.player.once(
 
             AudioPlayerStatus.Idle,
 
-            () => {
+            ()=>{
 
 
                 queue.songs.shift();
 
 
                 queue.current = null;
-
 
                 queue.playing = false;
 
@@ -224,7 +223,6 @@ async function playSong(guild, queue) {
 
 
 
-
                 playSong(
                     guild,
                     queue
@@ -240,12 +238,9 @@ async function playSong(guild, queue) {
 
 
 
-
         queue.player.on(
-
             "error",
-
-            error => {
+            error=>{
 
 
                 console.log(
@@ -254,11 +249,9 @@ async function playSong(guild, queue) {
                 );
 
 
+                queue.songs.shift();
 
                 queue.playing = false;
-
-
-                queue.songs.shift();
 
 
 
@@ -269,7 +262,6 @@ async function playSong(guild, queue) {
 
 
             }
-
         );
 
 
@@ -278,12 +270,17 @@ async function playSong(guild, queue) {
 
         yt.on(
             "error",
-            error => {
+            error=>{
+
 
                 console.log(
                     "❌ Erro yt-dlp:",
                     error.message
                 );
+
+
+                queue.playing = false;
+
 
             }
         );
@@ -295,12 +292,10 @@ async function playSong(guild, queue) {
     } catch(error){
 
 
-
         console.log(
             "❌ Erro ao tocar:",
             error.message
         );
-
 
 
         queue.playing = false;
@@ -310,7 +305,6 @@ async function playSong(guild, queue) {
 
 
 }
-
 
 
 
