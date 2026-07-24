@@ -211,7 +211,7 @@ console.log(input);
         input,
 
         "-loglevel",
-        "error",
+        "info",
 
         "-f",
         "s16le",
@@ -229,31 +229,30 @@ console.log(input);
 
 queue.ffmpegProcess = ff;
 
+ff.on("close", (code) => {
+    console.log("FFMPEG FECHOU:", code);
+});
 
-ff.stderr.on(
-    "data",
-    data=>{
-        console.log(
-            "FFMPEG:",
-            data.toString()
-        );
+ff.stdout.on("end", () => {
+    console.log("FFMPEG stdout terminou");
+});
+
+ff.stdout.on("error", (err) => {
+    console.log("FFMPEG stdout erro:", err.message);
+});
+
+ff.stderr.on("data", (data) => {
+    console.log("FFMPEG:", data.toString());
+});
+
+const resource = createAudioResource(
+    ff.stdout,
+    {
+        inlineVolume: true
     }
 );
-        const resource = createAudioResource(
-            ff.stdout,
-            {
 
-                inputType:
-                StreamType.Raw,
-
-                inlineVolume:true
-
-            }
-        );
-
-
-
-        queue.resource = resource;
+queue.resource = resource;
 
 
 
