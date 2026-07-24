@@ -58,50 +58,46 @@ async function playSong(guild, queue){
             song.url.includes("youtu.be")
         ){
 
-            const ytDlp = path.join(
-                process.cwd(),
-                "yt-dlp"
-            );
+        const ytDlp = process.platform === "win32"
+    ? path.join(process.cwd(), "yt-dlp.exe")
+    : path.join(process.cwd(), "yt-dlp");
 
 
-            const cookies = path.join(
-                process.cwd(),
-                "cookies.txt"
-            );
+const cookies = path.join(
+    process.cwd(),
+    "cookies.txt"
+);
 
 
-            console.log(
-                "🍪 Cookies existe:",
-                fs.existsSync(cookies)
-            );
+console.log(
+    "🍪 Cookies existe:",
+    fs.existsSync(cookies)
+);
 
 
+const yt = spawn(
+    ytDlp,
+    [
+        "-g",
 
-            const yt = spawn(
-                ytDlp,
-                [
+        "-f",
+        "bestaudio[ext=webm]/bestaudio/best",
 
-                    "-g",
+        "--no-playlist",
 
-                    "-f",
-                    "bestaudio[ext=webm]/bestaudio/best",
+        "--no-warnings",
 
-                    "--no-playlist",
+        "--force-ipv4",
 
-                    "--no-warnings",
+        "--cookies",
+        cookies,
 
-                    "--force-ipv4",
+        "--extractor-args",
+        "youtube:player_client=android",
 
-                    "--cookies",
-                    cookies,
-
-                    "--extractor-args",
-                    "youtube:player_client=android",
-
-                    song.url
-
-                ]
-            );
+        song.url
+    ]
+);
 
 
             queue.ytProcess = yt;
