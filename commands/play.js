@@ -3,6 +3,7 @@ const {
     createAudioPlayer
 } = require("@discordjs/voice");
 
+
 const play = require("play-dl");
 
 const queues = require("../music/queue");
@@ -10,6 +11,7 @@ const queues = require("../music/queue");
 const {
     playSong
 } = require("../music/player");
+
 
 
 module.exports = {
@@ -107,16 +109,13 @@ module.exports = {
         const song = {
 
 
-            title:
-            video.title,
+            title: video.title,
 
 
-            url:
-            video.url,
+            url: video.url,
 
 
-            id:
-            video.id,
+            id: video.id,
 
 
             thumbnail:
@@ -138,11 +137,11 @@ module.exports = {
 
 
 
-
         let serverQueue =
         queues.getQueue(
             message.guild.id
         );
+
 
 
 
@@ -157,11 +156,12 @@ module.exports = {
 
 
             return loading.edit(
-                "❌ Já estou tocando em outro canal de voz."
+                "❌ Já estou tocando em outro canal."
             );
 
 
         }
+
 
 
 
@@ -179,8 +179,10 @@ module.exports = {
 
 
 
+
             const connection =
             joinVoiceChannel({
+
 
                 channelId:
                 voice.id,
@@ -196,6 +198,7 @@ module.exports = {
 
                 selfDeaf:true
 
+
             });
 
 
@@ -210,6 +213,8 @@ module.exports = {
 
 
 
+
+
             serverQueue =
             queues.createQueue(
 
@@ -217,25 +222,19 @@ module.exports = {
 
                 {
 
+
                     voiceChannel: voice,
 
-                    textChannel: message.channel,
+
+                    textChannel:
+                    message.channel,
+
 
                     connection,
 
-                    player,
 
-                    songs: [],
+                    player
 
-                    loop:false,
-
-                    volume:50,
-
-                    current:null,
-
-                    startedAt:null,
-
-                    duration:0
 
                 }
 
@@ -258,26 +257,11 @@ module.exports = {
 
 
 
+
         serverQueue.songs.push(
             song
         );
 
-
-
-
-
-
-
-        if(!serverQueue.playing){
-
-
-            playSong(
-                message.guild,
-                song
-            );
-
-
-        }
 
 
 
@@ -290,6 +274,31 @@ module.exports = {
             `🎵 Adicionado: **${song.title}**`
 
         );
+
+
+
+
+
+
+
+
+
+        if(!serverQueue.playing){
+
+
+
+            playSong(
+
+                message.guild,
+
+                serverQueue
+
+            );
+
+
+        }
+
+
 
 
 

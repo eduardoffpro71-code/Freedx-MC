@@ -1,240 +1,167 @@
 const {
     createAudioResource,
-    AudioPlayerStatus,
-    StreamType
+    StreamType,
+    AudioPlayerStatus
 } = require("@discordjs/voice");
+
 
 const { spawn } = require("child_process");
 const path = require("path");
-const fs = require("fs");
+
 const ffmpeg = require("ffmpeg-static");
-const YTDlpWrap = require("yt-dlp-wrap").default;
 
 const queues = require("./queue");
 
-const ytDlpPath = path.join(
-    process.cwd(),
-    "yt-dlp"
-);
-
-const ytDlp = new YTDlpWrap(
-    ytDlpPath
-);
 
 
-function durationToSeconds(duration) {
+async function playSong(guild, queue) {
 
-    if (!duration)
-        return 0;
 
-    const p = duration.split(":").map(Number);
-
-    if (p.length === 2)
-        return p[0] * 60 + p[1];
-
-    if (p.length === 3)
-        return p[0] * 3600 + p[1] * 60 + p[2];
-
-    return 0;
-}
+    if(!queue){
+        console.log("❌ Queue não encontrada");
+        return;
+    }
 
 
 
-async function playSong(guild, song) {
+    if(queue.songs.length === 0){
 
-    const queue = queues.getQueue(
-        guild.id
-    );
 
-    if (!queue || !song)
+        queue.playing = false;
+        queue.current = null;
+
         return;
 
+    }
 
+
+
+
+
+    const song = queue.songs[0];
+
+
+    queue.current = song;
     queue.playing = true;
 
 
+
     console.log(
-        `🎵 Tocando: ${song.title}`
+        "🎵 Tocando:",
+        song.title
     );
+
+
+
+
 
 
     try {
 
-        const cookies = path.join(
+
+
+        const ytDlp = path.join(
             process.cwd(),
-            "cookies.txt"
+            "yt-dlp.exe"
         );
 
 
-        const args = [
 
-            song.url,
-
-            "-f",
-            "18",
-
-            "--no-playlist",
-
-            "--no-warnings",
-
-            "--ignore-errors",
-
-            "--force-ipv4",
-
-            "--retries",
-            "20",
-
-            "--fragment-retries",
-            "20",
-
-            "--socket-timeout",
-            "60",
-
-            "--extractor-args",
-            "youtube:player_client=android",
-
-            "-o",
-            "-"
-        ];
-
-
-        if(fs.existsSync(cookies)) {
-
-            console.log(
-                "🍪 Usando cookies"
-            );
-
-            args.splice(
-                1,
-                0,
-                "--cookies",
-                cookies
-            );
-
-        } else {
-
-            console.log(
-                "⚠️ cookies.txt não encontrado"
-            );
-
-        }
-
-
-
-        const stream =
-            ytDlp.execStream(
-                args
-            );
-
-
-
-        const ffmpegProcess =
-            spawn(
-                ffmpeg,
-                [
-
-                    "-i",
-                    "pipe:0",
-
-                    "-vn",
-
-                    "-ac",
-                    "2",
-
-                    "-ar",
-                    "48000",
-
-                    "-f",
-                    "s16le",
-
-                    "-loglevel",
-                    "error",
-
-                    "pipe:1"
+        const yt = spawn(
+            ytDlp,
+            [
+                "-f",
+                "bestaudio",
+                "-o",
+                "-",
+                song.url
+            ],
+            {
+                stdio:[
+                    "ignore",
+                    "pipe",
+                    "pipe"
                 ]
-            );
-
-
-
-        queue.ffmpegProcess =
-            ffmpegProcess;
-
-
-
-        stream.pipe(
-            ffmpegProcess.stdin
-        );
-
-
-
-        stream.on(
-            "error",
-            err => {
-
-                console.log(
-                    "❌ yt-dlp:",
-                    err.message
-                );
-
-                queue.playing = false;
-
-                try {
-                    ffmpegProcess.kill();
-                } catch {}
-
             }
         );
 
 
 
-        ffmpegProcess.on(
-            "error",
-            err => {
+        queue.ytProcess = yt;
 
-                console.log(
-                    "❌ ffmpeg:",
-                    err.message
-                );
 
-            }
+
+
+
+        const ff = spawn(
+            ffmpeg,
+            [
+                "-i",
+                "pipe:0",
+
+                "-analyzeduration",
+                "0",
+
+                "-loglevel",
+                "0",
+
+                "-f",
+                "s16le",
+
+                "-ar",
+                "48000",
+
+                "-ac",
+                "2",
+
+                "pipe:1"
+            ]
         );
+
+
+
+        queue.ffmpegProcess = ff;
+
+
+
+        yt.stdout.pipe(
+            ff.stdin
+        );
+
+
+
+
 
 
 
         const resource =
-            createAudioResource(
-                ffmpegProcess.stdout,
-                {
-                    inputType: StreamType.Raw,
-                    inlineVolume: true
-                }
-            );
+        createAudioResource(
+
+            ff.stdout,
+
+            {
+                inputType:
+                StreamType.Raw,
+
+                inlineVolume:true
+
+            }
+
+        );
 
 
-
-        if(resource.volume) {
-
-            resource.volume.setVolume(
-                (queue.volume || 50) / 100
-            );
-
-        }
 
 
 
         queue.resource = resource;
 
-        queue.current = song;
 
 
-
-        queue.player.removeAllListeners(
-            AudioPlayerStatus.Playing
+        resource.volume.setVolume(
+            queue.volume / 100
         );
 
-        queue.player.removeAllListeners(
-            AudioPlayerStatus.Idle
-        );
+
 
 
 
@@ -244,93 +171,105 @@ async function playSong(guild, song) {
 
 
 
-        queue.player.once(
-            AudioPlayerStatus.Playing,
-            () => {
-
-                queue.startedAt =
-                    Date.now();
-
-                console.log(
-                    "▶️ Música começou!"
-                );
-
-            }
-        );
 
 
 
         queue.player.once(
+
             AudioPlayerStatus.Idle,
+
             () => {
 
-                console.log(
-                    "⏹️ Música terminou"
-                );
 
+                queue.songs.shift();
 
-                queue.playing = false;
-
-
-                if(queue.ffmpegProcess) {
-
-                    try {
-                        queue.ffmpegProcess.kill();
-                    } catch {}
-
-                    queue.ffmpegProcess = null;
-
-                }
-
-
-                if(!queue.loop) {
-
-                    queue.songs.shift();
-
-                }
 
 
                 queue.current = null;
 
 
 
-                if(queue.songs.length) {
+                queue.playing = false;
 
-                    setTimeout(
-                        () => {
 
-                            playSong(
-                                guild,
-                                queue.songs[0]
-                            );
 
-                        },
-                        1000
-                    );
+                queue.ytProcess = null;
 
-                }
+                queue.ffmpegProcess = null;
+
+
+
+
+                playSong(
+                    guild,
+                    queue
+                );
+
+
+            }
+
+        );
+
+
+
+
+
+        queue.player.on(
+            "error",
+            error => {
+
+
+                console.log(
+                    "❌ Erro player:",
+                    error.message
+                );
+
+
+                queue.playing = false;
+
+
+                queue.songs.shift();
+
+
+                playSong(
+                    guild,
+                    queue
+                );
+
 
             }
         );
 
 
 
-    } catch(error) {
+
+
+    } catch(error){
+
+
 
         console.log(
-            "❌ Erro player:",
-            error.message
+            "❌ Erro ao tocar:",
+            error
         );
+
+
 
         queue.playing = false;
 
+
+
     }
+
+
 
 }
 
 
 
+
 module.exports = {
-    playSong,
-    durationToSeconds
+
+    playSong
+
 };
