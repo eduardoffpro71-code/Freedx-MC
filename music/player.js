@@ -88,8 +88,14 @@ const yt = spawn(
 
         "--force-ipv4",
 
+        "--extractor-args",
+        "youtube:player_client=android",
+
         "--cookies",
         cookies,
+
+        "-f",
+        "bestaudio/best",
 
         song.url
     ]
