@@ -14,7 +14,6 @@ const path = require("path");
 
 const ffmpeg = require("ffmpeg-static");
 
-const queues = require("./queue");
 
 
 
@@ -71,12 +70,15 @@ async function playSong(guild, queue) {
             [
 
                 "-f",
-                "bestaudio",
+                "bestaudio/best",
 
                 "--no-playlist",
 
                 "--extractor-args",
                 "youtube:player_client=android",
+
+                "--extractor-args",
+                "youtube:player_skip=webpage",
 
                 "-o",
                 "-",
@@ -101,9 +103,10 @@ async function playSong(guild, queue) {
 
 
 
+
         yt.stderr.on(
             "data",
-            data => {
+            data=>{
 
                 const msg =
                 data.toString();
@@ -122,6 +125,28 @@ async function playSong(guild, queue) {
 
             }
         );
+
+
+
+
+
+        yt.on(
+            "error",
+            error=>{
+
+
+                console.log(
+                    "❌ Erro yt-dlp:",
+                    error.message
+                );
+
+
+                queue.playing = false;
+
+
+            }
+        );
+
 
 
 
@@ -163,6 +188,7 @@ async function playSong(guild, queue) {
 
 
 
+
         yt.stdout.pipe(
             ff.stdin
         );
@@ -189,13 +215,19 @@ async function playSong(guild, queue) {
 
 
 
+
         queue.resource = resource;
 
 
 
-        resource.volume.setVolume(
-            queue.volume / 100
-        );
+        if(queue.volume){
+
+            resource.volume.setVolume(
+                queue.volume / 100
+            );
+
+        }
+
 
 
 
@@ -203,6 +235,8 @@ async function playSong(guild, queue) {
         queue.player.play(
             resource
         );
+
+
 
 
 
@@ -243,8 +277,12 @@ async function playSong(guild, queue) {
 
 
 
+
+
         queue.player.on(
+
             "error",
+
             error=>{
 
 
@@ -254,7 +292,9 @@ async function playSong(guild, queue) {
                 );
 
 
+
                 queue.songs.shift();
+
 
                 queue.playing = false;
 
@@ -267,29 +307,9 @@ async function playSong(guild, queue) {
 
 
             }
+
         );
 
-
-
-
-
-
-        yt.on(
-            "error",
-            error=>{
-
-
-                console.log(
-                    "❌ Erro yt-dlp:",
-                    error.message
-                );
-
-
-                queue.playing = false;
-
-
-            }
-        );
 
 
 
