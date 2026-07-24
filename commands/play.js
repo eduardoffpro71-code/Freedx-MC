@@ -4,7 +4,7 @@ const {
 } = require("@discordjs/voice");
 
 
-const play = require("play-dl");
+const yts = require("yt-search");
 
 const queues = require("../music/queue");
 
@@ -25,7 +25,7 @@ module.exports = {
         const voice = message.member.voice.channel;
 
 
-        if (!voice) {
+        if(!voice){
 
             return message.reply(
                 "🎤 Entre em um canal de voz primeiro!"
@@ -39,7 +39,7 @@ module.exports = {
 
 
 
-        if (!query) {
+        if(!query){
 
             return message.reply(
                 "🎵 Digite o nome da música ou link!"
@@ -55,52 +55,33 @@ module.exports = {
 
 
 
-        let result = [];
+        let video;
 
 
 
-        try {
+        try{
 
 
-            // se for link do youtube
-            if(play.yt_validate(query) === "video"){
-
-
-                result = [
-                    {
-                        title: query,
-                        url: query,
-                        id: query
-                    }
-                ];
-
-
-            } else {
+            const search = await yts(query);
 
 
 
-                const search =
-                await play.search(
-                    query,
-                    {
-                        limit: 1
-                    }
+            if(!search || !search.videos.length){
+
+
+                return loading.edit(
+                    "❌ Música não encontrada."
                 );
-
-
-
-                if(search){
-
-                    result = search;
-
-                }
-
 
             }
 
 
 
-        } catch(error) {
+            video = search.videos[0];
+
+
+
+        }catch(error){
 
 
             console.log(
@@ -113,31 +94,10 @@ module.exports = {
                 "❌ Erro ao procurar música."
             );
 
-
         }
 
 
 
-
-
-
-
-        if(!Array.isArray(result) || result.length === 0){
-
-
-            return loading.edit(
-                "❌ Música não encontrada."
-            );
-
-
-        }
-
-
-
-
-
-
-        const video = result[0];
 
 
 
@@ -147,28 +107,23 @@ module.exports = {
 
 
             title:
-            video.title || "Música",
-
+            video.title,
 
 
             url:
             video.url,
 
 
-
             id:
-            video.id || null,
-
+            video.videoId,
 
 
             thumbnail:
-            video.thumbnails?.[0]?.url || null,
-
+            video.thumbnail,
 
 
             duration:
-            video.durationRaw || "0:00",
-
+            video.timestamp,
 
 
             requestedBy:
@@ -184,11 +139,11 @@ module.exports = {
 
 
 
+
         let serverQueue =
         queues.getQueue(
             message.guild.id
         );
-
 
 
 
@@ -219,6 +174,7 @@ module.exports = {
 
 
 
+
         if(!serverQueue){
 
 
@@ -234,20 +190,16 @@ module.exports = {
             joinVoiceChannel({
 
 
-
                 channelId:
                 voice.id,
-
 
 
                 guildId:
                 message.guild.id,
 
 
-
                 adapterCreator:
                 message.guild.voiceAdapterCreator,
-
 
 
                 selfDeaf:true
@@ -294,7 +246,7 @@ module.exports = {
 
 
             console.log(
-                `🔊 Entrou no canal: ${voice.name}`
+                `🔊 Entrou na call: ${voice.name}`
             );
 
 
@@ -311,8 +263,6 @@ module.exports = {
         serverQueue.songs.push(
             song
         );
-
-
 
 
 
@@ -338,11 +288,8 @@ module.exports = {
 
 
             playSong(
-
                 message.guild,
-
                 serverQueue
-
             );
 
 
