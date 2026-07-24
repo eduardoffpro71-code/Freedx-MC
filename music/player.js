@@ -74,6 +74,8 @@ console.log(
     fs.existsSync(cookies)
 );
 
+console.log("🚀 PLAYER NOVO SEM -f");
+
 
 const yt = spawn(
     ytDlp,
