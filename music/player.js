@@ -23,6 +23,7 @@ async function playSong(guild, queue){
     }
 
 
+
     if(queue.songs.length === 0){
 
         queue.playing = false;
@@ -52,13 +53,13 @@ async function playSong(guild, queue){
     try{
 
 
-        let input;
+        let input = "";
 
 
 
-        // =====================
-        // YOUTUBE STREAM
-        // =====================
+        // ==========================
+        // YOUTUBE
+        // ==========================
 
         if(
             song.url.includes("youtube.com") ||
@@ -66,8 +67,7 @@ async function playSong(guild, queue){
         ){
 
 
-            const ytDlp =
-            path.join(
+            const ytDlp = path.join(
                 process.cwd(),
                 "yt-dlp"
             );
@@ -83,7 +83,7 @@ async function playSong(guild, queue){
                     "-g",
 
                     "-f",
-                    "bestaudio/best",
+                    "bestaudio[ext=webm]/bestaudio/best",
 
                     "--no-playlist",
 
@@ -94,15 +94,7 @@ async function playSong(guild, queue){
 
                     song.url
 
-                ],
-
-                {
-                    stdio:[
-                        "ignore",
-                        "pipe",
-                        "pipe"
-                    ]
-                }
+                ]
 
             );
 
@@ -112,51 +104,92 @@ async function playSong(guild, queue){
 
 
 
-            let url = "";
+            let output = "";
 
 
 
-            yt.stdout.on(
-                "data",
-                data=>{
+            await new Promise((resolve,reject)=>{
 
-                    url += data.toString();
-
-                }
-            );
-
-
-
-            await new Promise(resolve=>{
 
                 yt.stdout.on(
-                    "end",
-                    resolve
+                    "data",
+                    data=>{
+
+                        output += data.toString();
+
+                    }
                 );
+
+
+
+                yt.stderr.on(
+                    "data",
+                    data=>{
+
+                        console.log(
+                            "yt-dlp:",
+                            data.toString()
+                        );
+
+                    }
+                );
+
+
+
+                yt.on(
+                    "close",
+                    code=>{
+
+
+                        if(code !== 0){
+
+                            reject(
+                                new Error(
+                                    "yt-dlp falhou"
+                                )
+                            );
+
+                        }else{
+
+                            resolve();
+
+                        }
+
+
+                    }
+                );
+
+
+
+                yt.on(
+                    "error",
+                    reject
+                );
+
 
             });
 
 
 
-            if(!url){
+            if(!output){
 
                 throw new Error(
-                    "Não conseguiu pegar stream do YouTube"
+                    "Stream do YouTube vazio"
                 );
 
             }
 
 
 
-            input = url.trim();
+            input = output.trim();
 
 
         }else{
 
 
-            // =====================
+            // ==========================
             // LINK DIRETO
-            // =====================
+            // ==========================
 
 
             input = song.url;
@@ -166,6 +199,10 @@ async function playSong(guild, queue){
 
 
 
+
+        // ==========================
+        // FFMPEG
+        // ==========================
 
 
         const ff = spawn(
@@ -210,9 +247,21 @@ async function playSong(guild, queue){
 
 
 
-        const resource =
+        ff.stderr.on(
+            "data",
+            data=>{
 
-        createAudioResource(
+                console.log(
+                    "ffmpeg:",
+                    data.toString()
+                );
+
+            }
+        );
+
+
+
+        const resource = createAudioResource(
 
             ff.stdout,
 
@@ -246,7 +295,6 @@ async function playSong(guild, queue){
         queue.player.play(
             resource
         );
-
 
 
 
@@ -285,7 +333,6 @@ async function playSong(guild, queue){
 
 
 
-
         queue.player.on(
 
             "error",
@@ -297,6 +344,7 @@ async function playSong(guild, queue){
                     "❌ Player:",
                     error.message
                 );
+
 
 
                 queue.songs.shift();
@@ -317,7 +365,6 @@ async function playSong(guild, queue){
 
 
 
-
     }catch(error){
 
 
@@ -327,13 +374,20 @@ async function playSong(guild, queue){
         );
 
 
+
         queue.playing = false;
 
 
-        queue.songs.shift();
+
+        if(queue.songs.length){
+
+            queue.songs.shift();
+
+        }
 
 
     }
+
 
 
 }
