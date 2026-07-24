@@ -1,6 +1,10 @@
 config.json
 node_modules
 .env
+
 *.mp4
 *.webm
 *.mkv
+
+yt-dlp.exe
+cookies.txt
