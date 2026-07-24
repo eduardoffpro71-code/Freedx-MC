@@ -189,13 +189,13 @@ console.log(input);
 
 
 
+// ==========================
+// FFMPEG
+// ==========================
 
-        // ==========================
-        // FFMPEG
-        // ==========================
+console.log("FFMPEG PATH:", ffmpeg);
 
-
- const ff = spawn(
+const ff = spawn(
     ffmpeg,
     [
         "-reconnect",
@@ -211,7 +211,7 @@ console.log(input);
         input,
 
         "-loglevel",
-        "info",
+        "debug",
 
         "-f",
         "s16le",
@@ -228,6 +228,10 @@ console.log(input);
 
 
 queue.ffmpegProcess = ff;
+
+ff.on("error", (err) => {
+    console.log("ERRO FFMPEG:", err);
+});
 
 ff.on("close", (code) => {
     console.log("FFMPEG FECHOU:", code);
