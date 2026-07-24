@@ -9,6 +9,7 @@ const {
 } = require("child_process");
 
 const path = require("path");
+const fs = require("fs");
 
 const ffmpeg = require("ffmpeg-static");
 
@@ -48,7 +49,6 @@ async function playSong(guild, queue){
         let input;
 
 
-
         // ==========================
         // YOUTUBE STREAM
         // ==========================
@@ -62,6 +62,19 @@ async function playSong(guild, queue){
                 process.cwd(),
                 "yt-dlp"
             );
+
+
+            const cookies = path.join(
+                process.cwd(),
+                "cookies.txt"
+            );
+
+
+            console.log(
+                "🍪 Cookies existe:",
+                fs.existsSync(cookies)
+            );
+
 
 
             const yt = spawn(
@@ -80,10 +93,7 @@ async function playSong(guild, queue){
                     "--force-ipv4",
 
                     "--cookies",
-                    path.join(
-                        process.cwd(),
-                        "cookies.txt"
-                    ),
+                    cookies,
 
                     "--extractor-args",
                     "youtube:player_client=android",
@@ -182,7 +192,6 @@ async function playSong(guild, queue){
 
 
 
-
         // ==========================
         // FFMPEG
         // ==========================
@@ -217,20 +226,6 @@ async function playSong(guild, queue){
 
 
 
-        ff.stderr.on(
-            "data",
-            data=>{
-
-                console.log(
-                    "ffmpeg:",
-                    data.toString()
-                );
-
-            }
-        );
-
-
-
         const resource = createAudioResource(
             ff.stdout,
             {
@@ -259,7 +254,6 @@ async function playSong(guild, queue){
 
 
 
-
         if(!queue.connection){
 
             throw new Error(
@@ -275,7 +269,6 @@ async function playSong(guild, queue){
 
 
 
-
         queue.player.removeAllListeners(
             AudioPlayerStatus.Idle
         );
@@ -284,7 +277,6 @@ async function playSong(guild, queue){
         queue.player.removeAllListeners(
             "error"
         );
-
 
 
 
@@ -313,11 +305,9 @@ async function playSong(guild, queue){
 
 
 
-
         queue.player.once(
             "error",
             error=>{
-
 
                 console.log(
                     "❌ Player:",
@@ -338,7 +328,6 @@ async function playSong(guild, queue){
 
             }
         );
-
 
 
 
