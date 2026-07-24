@@ -211,8 +211,8 @@ const ff = spawn(
 
         "-vn",
 
-        "-f",
-        "s16le",
+        "-acodec",
+        "pcm_s16le",
 
         "-ar",
         "48000",
@@ -220,10 +220,12 @@ const ff = spawn(
         "-ac",
         "2",
 
+        "-f",
+        "s16le",
+
         "pipe:1"
     ]
 );
-
 
 queue.ffmpegProcess = ff;
 
