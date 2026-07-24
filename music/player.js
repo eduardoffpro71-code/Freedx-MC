@@ -80,17 +80,20 @@ const yt = spawn(
     [
         "-g",
 
-        "-f",
-        "bestaudio/best",
-
         "--no-playlist",
 
         "--no-warnings",
 
         "--force-ipv4",
 
+        "--extractor-args",
+        "youtube:player_client=android",
+
         "--cookies",
         cookies,
+
+        "-f",
+        "bestaudio",
 
         song.url
     ]
