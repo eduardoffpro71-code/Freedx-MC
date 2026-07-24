@@ -57,7 +57,6 @@ async function playSong(guild, queue) {
     try {
 
 
-        // pega o yt-dlp baixado pelo install-yt-dlp.js
         const ytDlp = path.join(
             process.cwd(),
             "yt-dlp"
@@ -70,12 +69,20 @@ async function playSong(guild, queue) {
             ytDlp,
 
             [
+
                 "-f",
                 "bestaudio",
+
                 "--no-playlist",
+
+                "--extractor-args",
+                "youtube:player_client=android",
+
                 "-o",
                 "-",
+
                 song.url
+
             ],
 
             {
@@ -91,7 +98,6 @@ async function playSong(guild, queue) {
 
 
         queue.ytProcess = yt;
-
 
 
 
@@ -157,10 +163,10 @@ async function playSong(guild, queue) {
 
 
 
-
         yt.stdout.pipe(
             ff.stdin
         );
+
 
 
 
@@ -237,7 +243,6 @@ async function playSong(guild, queue) {
 
 
 
-
         queue.player.on(
             "error",
             error=>{
@@ -263,6 +268,7 @@ async function playSong(guild, queue) {
 
             }
         );
+
 
 
 
