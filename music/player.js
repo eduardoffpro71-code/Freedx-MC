@@ -17,6 +17,7 @@ const ffmpeg = require("ffmpeg-static");
 
 
 
+
 async function playSong(guild, queue) {
 
 
@@ -38,11 +39,13 @@ async function playSong(guild, queue) {
 
 
 
+
     const song = queue.songs[0];
 
 
     queue.current = song;
     queue.playing = true;
+
 
 
 
@@ -53,13 +56,18 @@ async function playSong(guild, queue) {
 
 
 
+
+
     try {
+
 
 
         const ytDlp = path.join(
             process.cwd(),
             "yt-dlp"
         );
+
+
 
 
 
@@ -76,10 +84,11 @@ async function playSong(guild, queue) {
 
                 "--force-ipv4",
 
-                "--no-check-certificates",
+                "--extractor-args",
+                "youtube:player_client=android,web",
 
                 "--extractor-args",
-                "youtube:player_client=android",
+                "youtube:skip=dash",
 
                 "-o",
                 "-",
@@ -100,7 +109,9 @@ async function playSong(guild, queue) {
 
 
 
+
         queue.ytProcess = yt;
+
 
 
 
@@ -108,6 +119,7 @@ async function playSong(guild, queue) {
         yt.stderr.on(
             "data",
             data=>{
+
 
                 const msg =
                 data.toString();
@@ -124,8 +136,11 @@ async function playSong(guild, queue) {
 
                 }
 
+
             }
         );
+
+
 
 
 
@@ -137,17 +152,15 @@ async function playSong(guild, queue) {
 
 
                 console.log(
-                    "❌ yt-dlp erro:",
+                    "❌ yt-dlp:",
                     error.message
                 );
 
 
-                queue.playing = false;
-
-
-                if(queue.songs.length){
-                    queue.songs.shift();
-                }
+                nextSong(
+                    guild,
+                    queue
+                );
 
 
             }
@@ -191,7 +204,10 @@ async function playSong(guild, queue) {
 
 
 
+
+
         queue.ffmpegProcess = ff;
+
 
 
 
@@ -205,7 +221,8 @@ async function playSong(guild, queue) {
 
 
 
-        const resource = 
+
+        const resource =
         createAudioResource(
 
             ff.stdout,
@@ -224,7 +241,9 @@ async function playSong(guild, queue) {
 
 
 
+
         queue.resource = resource;
+
 
 
 
@@ -240,9 +259,13 @@ async function playSong(guild, queue) {
 
 
 
+
+
+
         queue.player.play(
             resource
         );
+
 
 
 
@@ -256,22 +279,7 @@ async function playSong(guild, queue) {
             ()=>{
 
 
-                queue.songs.shift();
-
-
-                queue.current = null;
-
-                queue.playing = false;
-
-
-                queue.ytProcess = null;
-
-                queue.ffmpegProcess = null;
-
-
-
-
-                playSong(
+                nextSong(
                     guild,
                     queue
                 );
@@ -286,9 +294,7 @@ async function playSong(guild, queue) {
 
 
 
-
-
-        queue.player.on(
+        queue.player.once(
 
             "error",
 
@@ -296,20 +302,12 @@ async function playSong(guild, queue) {
 
 
                 console.log(
-                    "❌ Player erro:",
+                    "❌ Player:",
                     error.message
                 );
 
 
-
-                queue.playing = false;
-
-
-                queue.songs.shift();
-
-
-
-                playSong(
+                nextSong(
                     guild,
                     queue
                 );
@@ -323,22 +321,73 @@ async function playSong(guild, queue) {
 
 
 
-    } catch(error){
+    }catch(error){
 
 
         console.log(
-            "❌ Erro ao tocar:",
+            "❌ Erro:",
             error.message
         );
 
 
-        queue.playing = false;
+        nextSong(
+            guild,
+            queue
+        );
 
 
     }
 
 
 }
+
+
+
+
+
+function nextSong(guild, queue){
+
+
+    if(queue.ytProcess){
+
+        queue.ytProcess.kill();
+
+    }
+
+
+    if(queue.ffmpegProcess){
+
+        queue.ffmpegProcess.kill();
+
+    }
+
+
+
+
+    queue.songs.shift();
+
+
+    queue.current = null;
+
+    queue.playing = false;
+
+
+    queue.ytProcess = null;
+
+    queue.ffmpegProcess = null;
+
+
+
+
+
+    playSong(
+        guild,
+        queue
+    );
+
+
+}
+
 
 
 

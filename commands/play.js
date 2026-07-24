@@ -14,6 +14,7 @@ const {
 
 
 
+
 module.exports = {
 
     name: "play",
@@ -62,18 +63,17 @@ module.exports = {
         try {
 
 
-
-            // se for link usa direto
-            if(
-                query.startsWith("http")
-            ){
+            // LINK DIRETO
+            if(query.startsWith("http")){
 
 
                 song = {
 
-                    title: query,
+                    title:
+                    query,
 
-                    url: query,
+                    url:
+                    query,
 
                     requestedBy:
                     message.author.username
@@ -81,8 +81,7 @@ module.exports = {
                 };
 
 
-            } else {
-
+            }else{
 
 
                 const search =
@@ -91,7 +90,9 @@ module.exports = {
 
 
                 if(
-                    !search.videos.length
+                    !search ||
+                    !search.videos ||
+                    search.videos.length === 0
                 ){
 
                     return loading.edit(
@@ -108,6 +109,7 @@ module.exports = {
 
 
                 song = {
+
 
                     title:
                     video.title,
@@ -132,6 +134,7 @@ module.exports = {
                     requestedBy:
                     message.author.username
 
+
                 };
 
 
@@ -139,8 +142,7 @@ module.exports = {
 
 
 
-
-        } catch(error){
+        }catch(error){
 
 
             console.log(
@@ -150,12 +152,11 @@ module.exports = {
 
 
             return loading.edit(
-                "❌ Erro ao buscar música."
+                "❌ Erro ao procurar música."
             );
 
 
         }
-
 
 
 
@@ -171,17 +172,14 @@ module.exports = {
 
 
 
-
-
         if(
             serverQueue &&
             serverQueue.voiceChannel &&
             serverQueue.voiceChannel.id !== voice.id
         ){
 
-
             return loading.edit(
-                "❌ Estou em outro canal."
+                "❌ Já estou tocando em outro canal."
             );
 
         }
@@ -195,8 +193,10 @@ module.exports = {
         if(!serverQueue){
 
 
+
             const player =
             createAudioPlayer();
+
 
 
 
@@ -223,9 +223,12 @@ module.exports = {
 
 
 
+
             connection.subscribe(
                 player
             );
+
+
 
 
 
@@ -248,11 +251,16 @@ module.exports = {
                     connection,
 
 
-                    player
+                    player,
+
+
+                    volume:100
 
                 }
 
             );
+
+
 
 
 
@@ -267,9 +275,13 @@ module.exports = {
 
 
 
+
+
         serverQueue.songs.push(
             song
         );
+
+
 
 
 
@@ -286,12 +298,16 @@ module.exports = {
 
 
 
+
         if(!serverQueue.playing){
 
 
             playSong(
+
                 message.guild,
+
                 serverQueue
+
             );
 
 
