@@ -44,7 +44,6 @@ async function playSong(guild, queue){
     );
 
 
-
     try{
 
         let input;
@@ -52,7 +51,7 @@ async function playSong(guild, queue){
 
 
         // ==========================
-        // YOUTUBE
+        // YOUTUBE STREAM
         // ==========================
 
         if(
@@ -73,13 +72,13 @@ async function playSong(guild, queue){
                     "-g",
 
                     "-f",
-                    "bestaudio",
-
-                    "--force-ipv4",
+                    "bestaudio[ext=webm]/bestaudio/best",
 
                     "--no-playlist",
 
                     "--no-warnings",
+
+                    "--force-ipv4",
 
                     "--extractor-args",
                     "youtube:player_client=android",
@@ -127,7 +126,6 @@ async function playSong(guild, queue){
                     "close",
                     code=>{
 
-
                         if(code !== 0){
 
                             reject(
@@ -159,7 +157,7 @@ async function playSong(guild, queue){
             if(!output.trim()){
 
                 throw new Error(
-                    "URL de áudio vazia"
+                    "Stream vazio"
                 );
 
             }
@@ -168,10 +166,11 @@ async function playSong(guild, queue){
             input = output.trim();
 
 
-
         }else{
 
+
             input = song.url;
+
 
         }
 
@@ -226,7 +225,6 @@ async function playSong(guild, queue){
 
 
 
-
         const resource = createAudioResource(
             ff.stdout,
             {
@@ -256,13 +254,7 @@ async function playSong(guild, queue){
 
 
 
-        if(queue.connection){
-
-            queue.connection.subscribe(
-                queue.player
-            );
-
-        }else{
+        if(!queue.connection){
 
             throw new Error(
                 "Sem conexão de voz"
@@ -271,11 +263,11 @@ async function playSong(guild, queue){
         }
 
 
+        queue.connection.subscribe(
+            queue.player
+        );
 
 
-        // ==========================
-        // EVENTOS
-        // ==========================
 
 
         queue.player.removeAllListeners(
@@ -289,10 +281,10 @@ async function playSong(guild, queue){
 
 
 
+
         queue.player.once(
             AudioPlayerStatus.Idle,
             ()=>{
-
 
                 console.log(
                     "⏹️ Música finalizada"
@@ -301,9 +293,7 @@ async function playSong(guild, queue){
 
                 queue.songs.shift();
 
-
                 queue.current = null;
-
                 queue.playing = false;
 
 
@@ -311,7 +301,6 @@ async function playSong(guild, queue){
                     guild,
                     queue
                 );
-
 
             }
         );
@@ -332,9 +321,7 @@ async function playSong(guild, queue){
 
                 queue.songs.shift();
 
-
                 queue.current = null;
-
                 queue.playing = false;
 
 
@@ -342,7 +329,6 @@ async function playSong(guild, queue){
                     guild,
                     queue
                 );
-
 
             }
         );
