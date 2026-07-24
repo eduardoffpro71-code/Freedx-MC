@@ -30,7 +30,6 @@ async function playSong(guild, queue){
     }
 
 
-
     const song = queue.songs[0];
 
 
@@ -79,6 +78,12 @@ async function playSong(guild, queue){
                     "--no-warnings",
 
                     "--force-ipv4",
+
+                    "--cookies",
+                    path.join(
+                        process.cwd(),
+                        "cookies.txt"
+                    ),
 
                     "--extractor-args",
                     "youtube:player_client=android",
@@ -173,6 +178,7 @@ async function playSong(guild, queue){
 
 
         }
+
 
 
 
